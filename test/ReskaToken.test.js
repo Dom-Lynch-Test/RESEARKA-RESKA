@@ -26,12 +26,11 @@ describe("ReskaToken", function () {
       owner.address, // publicSale
       owner.address, // escrow
     );
-    await reskaToken.deployed();
   });
 
   describe("Deployment", function () {
     it("Should set the right name and symbol", async function () {
-      expect(await reskaToken.name()).to.equal("RESKA Token");
+      expect(await reskaToken.name()).to.equal("RESEARKA");
       expect(await reskaToken.symbol()).to.equal("RESKA");
     });
 
@@ -41,7 +40,7 @@ describe("ReskaToken", function () {
     });
 
     it("Should have the correct initial supply", async function () {
-      const expectedSupply = ethers.utils.parseEther("1000000000"); // 1 billion tokens
+      const expectedSupply = ethers.parseEther("1000000000"); // 1 billion tokens
       expect(await reskaToken.totalSupply()).to.equal(expectedSupply);
     });
 
@@ -66,7 +65,7 @@ describe("ReskaToken", function () {
       expect(percentages[7]).to.equal(10); // Escrow: 10%
       
       // Total should be 100%
-      const totalPercentage = percentages.reduce((a, b) => a + b, 0);
+      const totalPercentage = percentages.reduce((acc, val) => acc + Number(val), 0);
       expect(totalPercentage).to.equal(100);
     });
   });
@@ -118,36 +117,38 @@ describe("ReskaToken", function () {
     it("Should not allow non-pausers to pause", async function () {
       await expect(
         reskaToken.connect(addr1).pause()
-      ).to.be.revertedWith("AccessControl:");
+      ).to.be.revertedWith("AccessControl: account " + addr1.address.toLowerCase() + " is missing role 0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a");
     });
   });
 
   describe("Minting", function () {
     it("Should allow minting up to the additional cap", async function () {
       const initialSupply = await reskaToken.totalSupply();
-      const additionalAmount = ethers.utils.parseEther("500000000"); // 500 million tokens
+      const additionalAmount = ethers.parseEther("500000000"); // 500 million tokens
       
       // Mint additional tokens
       await reskaToken.mint(addr1.address, additionalAmount);
       
       // Check new supply
-      expect(await reskaToken.totalSupply()).to.equal(initialSupply.add(additionalAmount));
+      expect(await reskaToken.totalSupply()).to.equal(initialSupply + additionalAmount);
       expect(await reskaToken.balanceOf(addr1.address)).to.equal(additionalAmount);
     });
 
     it("Should not allow minting beyond the additional cap", async function () {
-      const tooMuch = ethers.utils.parseEther("500000001"); // 500 million + 1 tokens
+      const tooMuch = ethers.parseEther("500000001"); // 500 million + 1 tokens
       
       // Try to mint too many tokens
       await expect(
         reskaToken.mint(addr1.address, tooMuch)
-      ).to.be.revertedWith("Exceeds maximum additional minting cap");
+      ).to.be.revertedWithCustomError(reskaToken, "ExceedsMintCap");
     });
 
     it("Should not allow non-minters to mint", async function () {
+      const addr1Contract = reskaToken.connect(addr1);
+      
       await expect(
-        reskaToken.connect(addr1).mint(addr2.address, 100)
-      ).to.be.revertedWith("AccessControl:");
+        addr1Contract.mint(addr1.address, 1000)
+      ).to.be.revertedWith("AccessControl: account " + addr1.address.toLowerCase() + " is missing role 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6");
     });
   });
 });

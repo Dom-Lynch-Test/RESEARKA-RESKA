@@ -4,7 +4,20 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+// Custom Errors
+error ZeroAddress();
+error AmountMustBePositive();
+error DurationMustBePositive();
+error SlicePeriodMustBePositive();
+error DurationTooShort();
+error InsufficientContractBalance();
+error ScheduleNotFound();
+error ScheduleNotRevocable();
+error ScheduleAlreadyRevoked();
+error IndexOutOfBounds();
+error NotBeneficiary();
+error NoTokensToRelease();
 
 /**
  * @title ReskaTokenVesting
@@ -12,7 +25,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
  * @custom:security-contact security@researka.com
  */
 contract ReskaTokenVesting is Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     // Vesting schedule structure
@@ -35,6 +47,8 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
         uint256 released;
         // Whether or not the vesting has been revoked
         bool revoked;
+        // Whether or not the vesting schedule has been created
+        bool created;
     }
 
     // Address of the ERC20 token
@@ -74,7 +88,7 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      * @param token_ Address of the ERC20 token contract
      */
     constructor(address token_) {
-        require(token_ != address(0), "TokenVesting: token cannot be zero address");
+        if (token_ == address(0)) revert ZeroAddress();
         _token = IERC20(token_);
     }
 
@@ -108,7 +122,7 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      * @return The vesting schedule ID
      */
     function getVestingScheduleIdAtIndex(uint256 index) external view returns (bytes32) {
-        require(index < vestingSchedulesIds.length, "TokenVesting: index out of bounds");
+        if (index >= vestingSchedulesIds.length) revert IndexOutOfBounds();
         return vestingSchedulesIds[index];
     }
 
@@ -119,7 +133,7 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      * @return The vesting schedule ID
      */
     function getVestingScheduleIdAtHolderIndex(address holder, uint256 index) external view returns (bytes32) {
-        require(index < holderVestingSchedulesIds[holder].length, "TokenVesting: index out of bounds");
+        if (index >= holderVestingSchedulesIds[holder].length) revert IndexOutOfBounds();
         return holderVestingSchedulesIds[holder][index];
     }
 
@@ -138,6 +152,7 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      * @return The vesting schedule structure
      */
     function getVestingSchedule(bytes32 scheduleId) external view returns (VestingSchedule memory) {
+        if (!vestingSchedules[scheduleId].created) revert ScheduleNotFound();
         return vestingSchedules[scheduleId];
     }
 
@@ -148,6 +163,7 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      */
     function getReleasableAmount(bytes32 scheduleId) public view returns (uint256) {
         VestingSchedule storage vestingSchedule = vestingSchedules[scheduleId];
+        if (!vestingSchedule.created) revert ScheduleNotFound();
         return _computeReleasableAmount(vestingSchedule);
     }
 
@@ -180,43 +196,43 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
         bool _revocable,
         uint256 _amount
     ) external onlyOwner {
-        require(_beneficiary != address(0), "TokenVesting: beneficiary cannot be zero address");
-        require(_amount > 0, "TokenVesting: amount must be > 0");
-        require(_duration > 0, "TokenVesting: duration must be > 0");
-        require(_slicePeriodSeconds > 0, "TokenVesting: slicePeriodSeconds must be > 0");
-        require(_duration >= _cliff, "TokenVesting: duration must be >= cliff");
-        
+        if (_beneficiary == address(0)) revert ZeroAddress();
+        if (_amount == 0) revert AmountMustBePositive();
+        if (_duration == 0) revert DurationMustBePositive();
+        if (_slicePeriodSeconds == 0) revert SlicePeriodMustBePositive();
+        if (_duration < _cliff) revert DurationTooShort();
+
         // Check that the contract has enough tokens
         uint256 contractBalance = _token.balanceOf(address(this));
-        require(contractBalance >= vestingSchedulesTotalAmount.add(_amount), "TokenVesting: insufficient token balance");
-        
+        if (contractBalance < vestingSchedulesTotalAmount + _amount) revert InsufficientContractBalance();
+
         // Compute the vesting schedule ID
         bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(
             _beneficiary,
             holderVestingSchedulesIds[_beneficiary].length
         );
-        
+
         // Create the vesting schedule
         vestingSchedules[vestingScheduleId] = VestingSchedule({
             beneficiary: _beneficiary,
-            cliff: _start.add(_cliff),
+            cliff: _start + _cliff,
             start: _start,
             duration: _duration,
             slicePeriodSeconds: _slicePeriodSeconds,
             revocable: _revocable,
             amountTotal: _amount,
             released: 0,
-            revoked: false
+            revoked: false,
+            created: true
         });
-        
+
         // Add the vesting schedule to the list
         vestingSchedulesIds.push(vestingScheduleId);
         holderVestingSchedulesIds[_beneficiary].push(vestingScheduleId);
-        
-        // Update the total amount of vested tokens
-        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.add(_amount);
-        
-        // Emit the event
+
+        // Update the total amount
+        vestingSchedulesTotalAmount += _amount;
+
         emit VestingScheduleCreated(
             vestingScheduleId,
             _beneficiary,
@@ -234,61 +250,57 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      */
     function release(bytes32 scheduleId) external nonReentrant {
         VestingSchedule storage vestingSchedule = vestingSchedules[scheduleId];
-        
-        // Check that the caller is the beneficiary
-        require(msg.sender == vestingSchedule.beneficiary, "TokenVesting: only beneficiary can release vested tokens");
-        
-        // Compute the releasable amount
-        uint256 amount = _computeReleasableAmount(vestingSchedule);
-        require(amount > 0, "TokenVesting: no tokens are due");
-        
-        // Update the released amount
-        vestingSchedule.released = vestingSchedule.released.add(amount);
-        
-        // Update the total amount
-        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
-        
-        // Transfer the tokens to the beneficiary
-        _token.safeTransfer(vestingSchedule.beneficiary, amount);
-        
-        // Emit the event
-        emit TokensReleased(scheduleId, vestingSchedule.beneficiary, amount);
+
+        // --- Checks ---
+        if (!vestingSchedule.created) revert ScheduleNotFound();
+        if (vestingSchedule.beneficiary != msg.sender) revert NotBeneficiary();
+        if (vestingSchedule.revoked) revert ScheduleAlreadyRevoked();
+
+        uint256 releasableAmount = _computeReleasableAmount(vestingSchedule);
+        if (releasableAmount == 0) revert NoTokensToRelease();
+
+        // --- Effects ---
+        // Update released amount *before* external call
+        vestingSchedule.released += releasableAmount;
+
+        // --- Interactions ---
+        _token.safeTransfer(vestingSchedule.beneficiary, releasableAmount);
+
+        emit TokensReleased(scheduleId, vestingSchedule.beneficiary, releasableAmount);
     }
 
     /**
      * @dev Revoke a vesting schedule
      * @param scheduleId The ID of the vesting schedule
      */
-    function revoke(bytes32 scheduleId) external onlyOwner {
+    function revoke(bytes32 scheduleId) external onlyOwner nonReentrant {
         VestingSchedule storage vestingSchedule = vestingSchedules[scheduleId];
-        
-        // Check that the vesting schedule is revocable
-        require(vestingSchedule.revocable, "TokenVesting: vesting schedule is not revocable");
-        
-        // Check that the vesting schedule has not been revoked
-        require(!vestingSchedule.revoked, "TokenVesting: vesting schedule already revoked");
-        
-        // Compute the releasable amount
-        uint256 releasableAmount = _computeReleasableAmount(vestingSchedule);
-        
-        // Compute the refundable amount
-        uint256 refundAmount = vestingSchedule.amountTotal.sub(vestingSchedule.released).sub(releasableAmount);
-        
-        // Update the revoked status
+
+        // --- Checks ---
+        if (!vestingSchedule.created) revert ScheduleNotFound();
+        if (!vestingSchedule.revocable) revert ScheduleNotRevocable();
+        if (vestingSchedule.revoked) revert ScheduleAlreadyRevoked();
+
+        uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
+        uint256 nonVestedAmount = vestingSchedule.amountTotal - vestedAmount;
+        uint256 releasedAmount = vestingSchedule.released;
+
+        // --- Effects ---
         vestingSchedule.revoked = true;
-        
-        // Update the total amount
-        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(refundAmount);
-        
-        // Emit the event
-        emit VestingRevoked(scheduleId);
-        
-        // Transfer the releasable tokens to the beneficiary
-        if (releasableAmount > 0) {
-            vestingSchedule.released = vestingSchedule.released.add(releasableAmount);
-            _token.safeTransfer(vestingSchedule.beneficiary, releasableAmount);
-            emit TokensReleased(scheduleId, vestingSchedule.beneficiary, releasableAmount);
+        vestingSchedule.amountTotal = releasedAmount + (nonVestedAmount > 0 ? 0 : vestedAmount - releasedAmount);
+
+        // Update global tracking if needed (adjust total vested amount)
+        if (nonVestedAmount > 0) {
+            vestingSchedulesTotalAmount -= nonVestedAmount;
         }
+
+        // --- Interactions ---
+        // Transfer non-vested tokens back to owner (if any)
+        if (nonVestedAmount > 0) {
+            _token.safeTransfer(owner(), nonVestedAmount);
+        }
+
+        emit VestingRevoked(scheduleId);
     }
 
     /**
@@ -296,7 +308,7 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      * @param amount The amount of tokens to withdraw
      */
     function withdraw(uint256 amount) external onlyOwner nonReentrant {
-        require(amount <= _token.balanceOf(address(this)).sub(vestingSchedulesTotalAmount), "TokenVesting: cannot withdraw vested tokens");
+        require(amount <= _token.balanceOf(address(this)) - vestingSchedulesTotalAmount, "TokenVesting: cannot withdraw vested tokens");
         _token.safeTransfer(owner(), amount);
     }
 
@@ -305,33 +317,23 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
      * @param vestingSchedule The vesting schedule
      * @return The amount of releasable tokens
      */
-    function _computeReleasableAmount(VestingSchedule memory vestingSchedule) internal view returns (uint256) {
-        // If the vesting schedule has been revoked, return 0
-        if (vestingSchedule.revoked) {
-            return 0;
-        }
-        
-        // If the current time is before the cliff, return 0
+    function _computeReleasableAmount(VestingSchedule storage vestingSchedule) private view returns (uint256) {
         uint256 currentTime = block.timestamp;
-        if (currentTime < vestingSchedule.cliff) {
+
+        if (currentTime < vestingSchedule.start + vestingSchedule.cliff) {
             return 0;
         }
-        
-        // If the current time is after the end of the vesting period, return the total amount minus the released amount
-        if (currentTime >= vestingSchedule.start.add(vestingSchedule.duration)) {
-            return vestingSchedule.amountTotal.sub(vestingSchedule.released);
+
+        if (currentTime >= vestingSchedule.start + vestingSchedule.duration || vestingSchedule.revoked) {
+            return vestingSchedule.amountTotal - vestingSchedule.released;
         }
-        
-        // Compute the number of full vesting periods that have elapsed
-        uint256 timeFromStart = currentTime.sub(vestingSchedule.start);
-        uint256 secondsPerSlice = vestingSchedule.slicePeriodSeconds;
-        uint256 vestedSlicePeriods = timeFromStart.div(secondsPerSlice);
-        uint256 vestedSeconds = vestedSlicePeriods.mul(secondsPerSlice);
-        
-        // Compute the amount of tokens that are vested
-        uint256 vestedAmount = vestingSchedule.amountTotal.mul(vestedSeconds).div(vestingSchedule.duration);
-        
-        // Return the vested amount minus the released amount
-        return vestedAmount.sub(vestingSchedule.released);
+
+        uint256 timeElapsed = currentTime - vestingSchedule.start;
+        uint256 vestedSlices = timeElapsed / vestingSchedule.slicePeriodSeconds;
+        uint256 vestedAmount = (vestingSchedule.amountTotal * vestedSlices * vestingSchedule.slicePeriodSeconds) / vestingSchedule.duration;
+
+        uint256 releasable = vestedAmount > vestingSchedule.released ? vestedAmount - vestingSchedule.released : 0;
+
+        return releasable;
     }
 }

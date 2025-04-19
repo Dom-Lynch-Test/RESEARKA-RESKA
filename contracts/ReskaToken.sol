@@ -6,6 +6,14 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+// Custom Errors
+error ZeroAddress();
+error InvalidAllocationTotal();
+error MintToZeroAddress();
+error AmountMustBePositive();
+error ExceedsMintCap();
+error RenounceRoleZeroAddress();
+
 /**
  * @title ReskaToken
  * @dev ERC20 token with role-based access control, pausable functionality, and allocation tracking
@@ -71,14 +79,14 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
         address _escrowAddress
     ) ERC20("RESEARKA", "RESKA") {
         // Validate addresses
-        require(_founderAddress != address(0), "Founder address cannot be zero");
-        require(_advisorsAddress != address(0), "Advisors address cannot be zero");
-        require(_investorsAddress != address(0), "Investors address cannot be zero");
-        require(_airdropsAddress != address(0), "Airdrops address cannot be zero");
-        require(_ecosystemAddress != address(0), "Ecosystem address cannot be zero");
-        require(_treasuryAddress != address(0), "Treasury address cannot be zero");
-        require(_publicSaleAddress != address(0), "Public sale address cannot be zero");
-        require(_escrowAddress != address(0), "Escrow address cannot be zero");
+        if (_founderAddress == address(0)) revert ZeroAddress();
+        if (_advisorsAddress == address(0)) revert ZeroAddress();
+        if (_investorsAddress == address(0)) revert ZeroAddress();
+        if (_airdropsAddress == address(0)) revert ZeroAddress();
+        if (_ecosystemAddress == address(0)) revert ZeroAddress();
+        if (_treasuryAddress == address(0)) revert ZeroAddress();
+        if (_publicSaleAddress == address(0)) revert ZeroAddress();
+        if (_escrowAddress == address(0)) revert ZeroAddress();
         
         // Set up allocations
         allocations.push(Allocation(_founderAddress, 10, AllocationTypes.FOUNDER));       // 10% to Founder
@@ -95,7 +103,7 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
         for (uint i = 0; i < allocations.length; i++) {
             totalAllocation += allocations[i].percentage;
         }
-        require(totalAllocation == 100, "Total allocation must equal 100%");
+        if (totalAllocation != 100) revert InvalidAllocationTotal();
         
         // Grant roles
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -145,11 +153,11 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
      * - Total additional minting cannot exceed MAX_ADDITIONAL_MINTING
      */
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-        require(to != address(0), "Cannot mint to zero address");
-        require(amount > 0, "Amount must be greater than zero");
+        if (to == address(0)) revert MintToZeroAddress();
+        if (amount == 0) revert AmountMustBePositive(); // Use == 0 for positive check
         
         // Check if additional minting exceeds the cap
-        require(totalMintedAdditional + amount <= MAX_ADDITIONAL_MINTING, "Exceeds maximum additional minting cap");
+        if (totalMintedAdditional + amount > MAX_ADDITIONAL_MINTING) revert ExceedsMintCap();
         
         totalMintedAdditional += amount;
         _mint(to, amount);
@@ -197,7 +205,7 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
      * - Caller must have the DEFAULT_ADMIN_ROLE
      */
     function safeRenounceRole(bytes32 role, address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(account != address(0), "Cannot renounce role from zero address");
+        if (account == address(0)) revert RenounceRoleZeroAddress();
         revokeRole(role, account);
         emit RoleRenounced(role, account);
     }
@@ -213,7 +221,7 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
         whenNotPaused
-        override
+        override(ERC20)
     {
         super._beforeTokenTransfer(from, to, amount);
     }

@@ -1,14 +1,12 @@
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-ethers");
+require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
-require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
 require("hardhat-gas-reporter");
 
 /** @type {import('hardhat/config').HardhatUserConfig} */
 module.exports = {
   solidity: {
-    version: "0.8.17",
+    version: "0.8.20", // Use a known available version
     settings: {
       optimizer: {
         enabled: true,
@@ -37,10 +35,6 @@ module.exports = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }
   },
-  // For contract verification
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
-  },
   // Named accounts for deployment scripts
   namedAccounts: {
     deployer: {
@@ -49,7 +43,7 @@ module.exports = {
       5: process.env.WALLET_ADDRESS, // Goerli
     },
   },
-  // Gas reporter configuration
+  // Gas reporter configuration - Re-enabled
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
