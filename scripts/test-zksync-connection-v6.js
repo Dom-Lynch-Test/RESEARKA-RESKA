@@ -7,6 +7,14 @@ async function main() {
   console.log("Testing connection to zkSync Era Testnet...");
   
   try {
+    // Get the network name we're using
+    const networkName = hre.network.name;
+    console.log(`Current network: ${networkName}`);
+    
+    if (networkName !== 'zkSyncTestnet') {
+      console.log("⚠️ Warning: You are not connected to zkSyncTestnet. Use --network zkSyncTestnet");
+    }
+    
     // Use hardhat's ethers provider
     const provider = ethers.provider;
     console.log(`Provider URL: ${provider.connection.url}`);
@@ -60,7 +68,7 @@ async function main() {
     
     console.log("\n=== CONNECTION TEST SUCCESSFUL ===");
     console.log("You're ready to deploy to zkSync testnet!");
-    console.log(`Run: npx hardhat run scripts/deploy-zksync-v6.js --network zkSyncTestnet`);
+    console.log(`Run: npx hardhat run scripts/deploy-zksync-testnet.js --network zkSyncTestnet`);
     return true;
     
   } catch (error) {
@@ -76,9 +84,9 @@ async function main() {
     console.log("   - ZKSYNC_TESTNET_URL=https://zksync-era-testnet.blockpi.network/v1/rpc/public");
     console.log("4. If you continue having issues, try using a VPN or different network");
     console.log("5. Consider following the staged approach as planned:");
-    console.log("   - Deploy locally first");
-    console.log("   - Then deploy to Goerli testnet");
-    console.log("   - Then try zkSync testnet again when network conditions improve");
+    console.log("   - Deploy locally first (already completed)");
+    console.log("   - Bridge some Goerli ETH to zkSync testnet wallet");
+    console.log("   - Then try zkSync testnet again when funds are available");
     
     return false;
   }

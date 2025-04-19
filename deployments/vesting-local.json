@@ -1,0 +1,11 @@
+{
+  "token": "0x34B40BA116d5Dec75548a9e9A8f15411461E8c70",
+  "vesting": "0x19cEcCd6942ad38562Ee10bAfd44776ceB67e923",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "scheduleId": "0xa279197a1d7a4b7398aa0248e95b8fcc6cdfb43220ade05d01add9c5468ea097",
+  "beneficiary": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  "cliffEnds": 1745074090,
+  "fullyVestedAt": 1745074210,
+  "network": "localhost",
+  "timestamp": "2025-04-19T14:44:51.778Z"
+}
