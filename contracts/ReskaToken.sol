@@ -26,8 +26,8 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl, Reentrancy
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     
     // Constants
-    uint256 public constant INITIAL_SUPPLY = 1_000_000_000 * 10**18; // 1 billion tokens with 18 decimals
-    uint256 public constant MAX_ADDITIONAL_MINTING = 500_000_000 * 10**18; // 500 million additional tokens max
+    uint256 public constant INITIAL_SUPPLY = 1_000_000_000 * 10**6; // 1 billion tokens with 6 decimals
+    uint256 public constant MAX_ADDITIONAL_MINTING = 500_000_000 * 10**6; // 500 million additional tokens max
     
     // Allocation tracking
     uint256 public totalMintedAdditional;
@@ -225,6 +225,14 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl, Reentrancy
         override(ERC20)
     {
         super._beforeTokenTransfer(from, to, amount);
+    }
+    
+    /**
+     * @dev Override the decimals() function to return 6 instead of the default 18
+     * @return The number of decimals used by the token (6, like USDT)
+     */
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
     }
     
     /**

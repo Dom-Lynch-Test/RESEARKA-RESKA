@@ -1,58 +1,42 @@
 // Script to deploy the contract to a local Hardhat node
-const { ethers } = require('ethers');
-const fs = require('fs');
-const path = require('path');
+const { ethers } = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 async function main() {
   console.log('Deploying ReskaToken to local Hardhat node...');
   
   try {
-    // Load compiled contract
-    const artifactPath = path.resolve(__dirname, '../artifacts/ReskaToken.json');
-    const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
-    
-    // Get contract ABI and bytecode
-    const contractOutput = artifact.contracts['ReskaToken.sol'].ReskaToken;
-    const abi = contractOutput.abi;
-    const bytecode = contractOutput.evm.bytecode.object;
-    
-    // Connect to local Hardhat node
-    const provider = new ethers.providers.JsonRpcProvider('http://127.0.0.1:8545');
-    
-    // Get the first account as deployer
-    const accounts = await provider.listAccounts();
-    if (accounts.length === 0) {
-      throw new Error('No accounts found. Make sure Hardhat node is running.');
-    }
-    
-    const deployer = accounts[0];
-    const wallet = provider.getSigner(deployer);
-    
-    console.log('Deploying from account:', deployer);
-    
-    // Create contract factory
-    const factory = new ethers.ContractFactory(abi, bytecode, wallet);
-    
+    // Get signers from Hardhat
+    const [deployer] = await ethers.getSigners();
+     
+    console.log('Deploying from account:', deployer.address);
+     
+    // Create contract factory using Hardhat's ethers integration
+    const ReskaToken = await ethers.getContractFactory("ReskaToken");
+     
     // Deploy contract with all allocations set to the deployer address for simplicity
-    const reskaToken = await factory.deploy(
-      deployer, // founder
-      deployer, // advisors
-      deployer, // investors
-      deployer, // airdrops
-      deployer, // ecosystem
-      deployer, // treasury
-      deployer, // publicSale
-      deployer  // escrow
+    const reskaToken = await ReskaToken.deploy(
+      deployer.address, // founder
+      deployer.address, // advisors
+      deployer.address, // investors
+      deployer.address, // airdrops
+      deployer.address, // ecosystem
+      deployer.address, // treasury
+      deployer.address, // publicSale
+      deployer.address  // escrow
     );
+     
+    // Wait for deployment to complete
+    await reskaToken.waitForDeployment();
     
-    await reskaToken.deployed();
-    
-    console.log('ReskaToken deployed to:', reskaToken.address);
-    
+    const reskaTokenAddress = await reskaToken.getAddress();
+    console.log('ReskaToken deployed to:', reskaTokenAddress);
+     
     // Save deployment info to a file for tests to use
     const deploymentInfo = {
-      address: reskaToken.address,
-      deployer: deployer,
+      address: reskaTokenAddress,
+      deployer: deployer.address,
       network: 'localhost',
       timestamp: new Date().toISOString()
     };
