@@ -22,13 +22,11 @@ At its core, the RESKA token serves three main purposes:
 
 ## Key Token Parameters
 
-| Property               | Value                             |
-|------------------------|-----------------------------------|
-| **Name**               | Researka                          |
-| **Symbol**             | RESKA                             |
-| **Total Supply**       | 100,000,000 RESKA                 |
-| **Decimals**           | 6                               |
-| **Initial Distribution**
+Name: Researka                          
+Symbol: RESKA                             
+Total Supply: 100,000,000 RESKA                 
+Decimals: 6                               
+Initial Distribution
 Founder: 10% – 10,000,000 RESKA
 Advisors: 5% – 5,000,000 RESKA
 Investors / Strategic Partners: 5% – 5,000,000 RESKA
