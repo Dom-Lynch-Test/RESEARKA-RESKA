@@ -1,12 +1,12 @@
-// RESKA Token zkSync Testnet Deployment Script - Final Version
-// Compatible with multiple zkSync libraries and tested against local environments
+// RESKA Token zkSync Era (Sepolia) Deployment Script
+// Updated: April 2025 - Using Sepolia-based zkSync testnet (Goerli deprecated)
 const { ethers } = require("hardhat");
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  console.log("\n=== RESKA TOKEN DEPLOYMENT TO ZKSYNC ERA TESTNET ===");
+  console.log("\n=== RESKA TOKEN DEPLOYMENT TO ZKSYNC ERA (SEPOLIA) ===");
   console.log(`[${new Date().toISOString()}] Starting deployment process...`);
 
   try {
@@ -30,8 +30,8 @@ async function main() {
     if (balance < ethers.parseEther("0.01")) {
       console.warn("⚠️ WARNING: Your wallet has very little ETH. Deployment may fail.");
       console.warn("To fund your wallet:");
-      console.warn("1. Get Goerli ETH from a faucet like https://goerlifaucet.com/");
-      console.warn("2. Bridge to zkSync using https://portal.zksync.io/bridge");
+      console.warn("1. Get Sepolia ETH from a faucet like https://faucet.sepolia.dev or https://sepoliafaucet.com");
+      console.warn("2. Bridge to zkSync using https://bridge.zksync.io/");
     }
 
     // Deploy with multiple retry attempts
@@ -147,8 +147,8 @@ async function main() {
     const deploymentInfo = {
       network: networkName,
       blockExplorer: networkName === 'zkSyncTestnet' 
-        ? 'https://explorer.zksync.io/address/' 
-        : 'https://goerli.explorer.zksync.io/address/',
+        ? 'https://explorer.sepolia.era.zksync.dev/address/' 
+        : 'https://sepolia.etherscan.io/address/',
       tokenContract: tokenAddress,
       vestingContract: vestingAddress,
       deployer: deployer.address,
@@ -191,7 +191,7 @@ async function main() {
     
     // Log verification instructions
     console.log("\n=== NEXT STEPS ===");
-    console.log("1. Verify contracts on zkSync Explorer:");
+    console.log("1. Verify contracts on zkSync Sepolia Explorer:");
     console.log(`   npx hardhat verify --network ${networkName} ${tokenAddress}`);
     console.log(`   npx hardhat verify --network ${networkName} ${vestingAddress} ${tokenAddress}`);
     
@@ -216,14 +216,15 @@ async function main() {
       console.error("Check your internet connection and zkSync RPC endpoint.");
     } else if (error.message.includes('insufficient funds')) {
       console.error("Insufficient funds for deployment.");
-      console.error("Make sure your wallet has enough ETH on zkSync Era Testnet.");
+      console.error("Make sure your wallet has enough ETH on zkSync Era Sepolia.");
     }
     
     console.log("\n=== TROUBLESHOOTING SUGGESTIONS ===");
     console.log("1. Check zkSync network status: https://status.zksync.io/");
-    console.log("2. Verify your wallet has sufficient ETH on zkSync Era Testnet");
-    console.log("3. Try using a VPN if regional network restrictions may apply");
-    console.log("4. If on your local machine, try deploying from the server instead:");
+    console.log("2. Verify your wallet has sufficient ETH on zkSync Era Sepolia");
+    console.log("3. Make sure you've bridged Sepolia ETH (not Goerli) to zkSync");
+    console.log("4. Use the Portal bridge: https://bridge.zksync.io/");
+    console.log("5. If on your local machine, try deploying from the server instead:");
     console.log("   ssh reska@5.161.55.81");
     console.log("   cd reska-token");
     console.log("   npx hardhat run scripts/deploy-zksync-final.js --network zkSyncTestnet");

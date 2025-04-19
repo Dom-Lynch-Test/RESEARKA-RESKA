@@ -1,17 +1,23 @@
-// Place zkSync plugins at the top of the file
-require("@matterlabs/hardhat-zksync");
-
-// Standard Hardhat plugins
+// Updated Hardhat configuration for Sepolia (replacing deprecated Goerli)
+require("@matterlabs/hardhat-zksync-deploy");
+require("@matterlabs/hardhat-zksync-solc");
+require("@matterlabs/hardhat-zksync-node");
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 require("solidity-coverage");
 require("hardhat-gas-reporter");
 require("@nomicfoundation/hardhat-chai-matchers");
 
-/** @type {import('hardhat/config').HardhatUserConfig} */
+// Default values if environment variables are not set
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000000";
+const ZKSYNC_TESTNET_URL = process.env.ZKSYNC_TESTNET_URL || "https://sepolia.era.zksync.dev";
+const SEPOLIA_URL = process.env.SEPOLIA_URL || "https://rpc.sepolia.org";
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
+
+/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: "0.8.20", // Use a known available version
+    version: "0.8.20",
     settings: {
       optimizer: {
         enabled: true,
@@ -19,61 +25,60 @@ module.exports = {
       }
     }
   },
+  defaultNetwork: "hardhat",
+  networks: {
+    // Hardhat local network
+    hardhat: {
+      chainId: 31337,
+      zksync: false
+    },
+    // Local Hardhat node for standard Ethereum testing
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 31337,
+      zksync: false
+    },
+    // Local zkSync node for zkSync-specific testing
+    zkSyncTestnetLocal: {
+      url: "http://localhost:3050",
+      ethNetwork: "localhost",
+      zksync: true
+    },
+    // zkSync Era Testnet (Sepolia) configuration
+    zkSyncTestnet: {
+      url: ZKSYNC_TESTNET_URL,
+      ethNetwork: SEPOLIA_URL, // Updated: Using Sepolia as L1 base layer
+      zksync: true,
+      accounts: [PRIVATE_KEY],
+      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
+    },
+    // Sepolia testnet for L1 interactions (replacing Goerli)
+    sepolia: {
+      url: SEPOLIA_URL,
+      accounts: [PRIVATE_KEY],
+      chainId: 11155111 // Sepolia chain ID
+    }
+  },
+  // zkSync compiler settings
   zksolc: {
-    version: "1.3.13",
+    version: "1.3.14",
     compilerSource: "binary",
     settings: {
       optimizer: {
         enabled: true,
       },
-    },
-  },
-  networks: {
-    hardhat: {
-      chainId: 1337
-    },
-    goerli: {
-      url: process.env.GOERLI_URL || "https://rpc.ankr.com/eth_goerli",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
-    },
-    mainnet: {
-      url: process.env.MAINNET_URL || "https://eth.llamarpc.com",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
-    },
-    zkSyncTestnet: {
-      url: process.env.ZKSYNC_TESTNET_URL || "https://testnet.era.zksync.dev",
-      ethNetwork: "goerli", // underlying L1 network
-      zksync: true,
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-    },
-    zkSyncMainnet: {
-      url: process.env.ZKSYNC_MAINNET_URL || "https://mainnet.era.zksync.io",
-      ethNetwork: "mainnet", // underlying L1 network
-      zksync: true,
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      // Specify EVM legacy assembly to avoid the zksolc warnings
+      compilerPath: "",
+      experimental: {}
     }
-  },
-  // Named accounts for deployment scripts
-  namedAccounts: {
-    deployer: {
-      default: 0
-    }
-  },
-  // For gas reporting
-  gasReporter: {
-    enabled: process.env.REPORT_GAS ? true : false,
-    currency: "USD",
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY
   },
   // For contract verification
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: ETHERSCAN_API_KEY
   },
-  // Set paths for artifacts
-  paths: {
-    artifacts: "./artifacts",
-    cache: "./cache",
-    sources: "./contracts",
-    tests: "./test"
+  // For gas reporting
+  gasReporter: {
+    enabled: process.env.REPORT_GAS !== undefined,
+    currency: "USD",
   }
 };
