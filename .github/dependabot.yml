@@ -1,0 +1,36 @@
+version: 2
+updates:
+  # Check for updates to npm packages
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: "main"
+    labels:
+      - "dependencies"
+      - "security"
+    # Ignore patch versions for development dependencies
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+        dependency-type: "development"
+    # Reviewers for dependency PRs
+    reviewers:
+      - "Dom-Lynch-Test"
+    # Set higher priority for security updates
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    
+  # Check for updates to GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "ci-cd"
+      - "dependencies"
+    reviewers:
+      - "Dom-Lynch-Test"
