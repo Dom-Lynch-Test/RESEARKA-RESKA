@@ -1,0 +1,72 @@
+repository:
+  # See https://docs.github.com/en/rest/repos/repos for all available settings.
+  name: RESEARKA-RESKA
+  description: RESEARKA (RESKA) ERC-20 token for a decentralized academic publishing platform
+  homepage: https://github.com/Dom-Lynch-Test/RESEARKA-RESKA
+  topics: erc20, token, zksync, ethereum, smart-contracts, solidity
+
+  # Either `true` to make the repository private, or `false` to make it public.
+  private: false
+
+  # Either `true` to enable issues for this repository, `false` to disable them.
+  has_issues: true
+
+  # Either `true` to enable projects for this repository, or `false` to disable them.
+  # If projects are disabled for the organization, passing `true` will cause an API error.
+  has_projects: true
+
+  # Either `true` to enable the wiki for this repository, `false` to disable it.
+  has_wiki: true
+
+  # Either `true` to enable downloads for this repository, `false` to disable them.
+  has_downloads: true
+
+  # Updates the default branch for this repository.
+  default_branch: main
+
+  # Either `true` to allow squash-merging pull requests, or `false` to prevent
+  # squash-merging.
+  allow_squash_merge: true
+
+  # Either `true` to allow merging pull requests with a merge commit, or `false`
+  # to prevent merging pull requests with merge commits.
+  allow_merge_commit: true
+
+  # Either `true` to allow rebase-merging pull requests, or `false` to prevent
+  # rebase-merging.
+  allow_rebase_merge: true
+
+  # Either `true` to enable automatic deletion of branches on merge, or `false` to disable
+  delete_branch_on_merge: true
+
+# Branch protection rules
+branches:
+  - name: main
+    protection:
+      # Required. Requires status checks to pass before merging.
+      required_status_checks:
+        # Required. Requires branches to be up to date before merging.
+        strict: true
+        contexts:
+          - 'Test Smart Contracts'
+          - 'Security Analysis'
+          - 'Verify Package Integrity'
+
+      # Required. Enforce all configured restrictions for administrators.
+      enforce_admins: true
+
+      # Required. Restricts who can push to the protected branch.
+      required_pull_request_reviews:
+        # Required. Dismiss approved reviews when someone pushes new changes.
+        dismiss_stale_reviews: true
+        # Required. Blocks merge until code owners have reviewed.
+        require_code_owner_reviews: true
+        # Required. Specify the number of reviewers required to approve pull requests.
+        required_approving_review_count: 1
+
+      # Required. Restrict who can push to this branch.
+      restrictions:
+        users: []
+        # Note: Only organization owners can add restrictions to users.
+        # You can use the GitHub web interface to set this up.
+        teams: []

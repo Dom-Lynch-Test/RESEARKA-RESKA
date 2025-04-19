@@ -1,0 +1,15 @@
+# RESKA Token Project Code Ownership Rules
+
+# Solidity contracts require review from the repository owner
+/contracts/*.sol    @Dom-Lynch-Test
+
+# Deployment and migration scripts also require review
+/scripts/*.js       @Dom-Lynch-Test
+
+# Test files require review to ensure proper testing
+/test/*.js          @Dom-Lynch-Test
+
+# All configuration files require review
+hardhat.config.js   @Dom-Lynch-Test
+package.json        @Dom-Lynch-Test
+.env.example        @Dom-Lynch-Test
