@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 /**
  * @title ReskaToken
  * @dev ERC20 token with role-based access control, pausable functionality, and allocation tracking
+ * @custom:security-contact security@researka.com
  */
 contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
     // Roles
@@ -22,17 +23,31 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
     // Allocation tracking
     uint256 public totalMintedAdditional;
     
+    // Allocation types
+    enum AllocationTypes {
+        FOUNDER,
+        ADVISORS,
+        INVESTORS,
+        AIRDROPS,
+        ECOSYSTEM,
+        TREASURY,
+        PUBLIC_SALE,
+        ESCROW
+    }
+    
     // Allocation percentages and addresses
     struct Allocation {
         address recipient;
         uint8 percentage;
+        AllocationTypes allocationType;
     }
     
     Allocation[] public allocations;
     
     // Events
-    event TokensAllocated(address indexed recipient, uint256 amount, string allocationName);
+    event TokensAllocated(address indexed recipient, uint256 amount, AllocationTypes indexed allocationType, string allocationName);
     event AdditionalTokensMinted(address indexed to, uint256 amount);
+    event RoleRenounced(bytes32 indexed role, address indexed account);
     
     /**
      * @dev Constructor that sets up initial token allocations and mints the initial supply
@@ -66,14 +81,14 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
         require(_escrowAddress != address(0), "Escrow address cannot be zero");
         
         // Set up allocations
-        allocations.push(Allocation(_founderAddress, 10));    // 10% to Founder
-        allocations.push(Allocation(_advisorsAddress, 5));    // 5% to Advisors
-        allocations.push(Allocation(_investorsAddress, 5));   // 5% to Investors
-        allocations.push(Allocation(_airdropsAddress, 40));   // 40% to Airdrops/Rewards
-        allocations.push(Allocation(_ecosystemAddress, 10));  // 10% to Ecosystem Development
-        allocations.push(Allocation(_treasuryAddress, 10));   // 10% to Treasury Reserve
-        allocations.push(Allocation(_publicSaleAddress, 10)); // 10% to Public Sale/DEX Liquidity
-        allocations.push(Allocation(_escrowAddress, 10));     // 10% to Long-Term Escrow
+        allocations.push(Allocation(_founderAddress, 10, AllocationTypes.FOUNDER));       // 10% to Founder
+        allocations.push(Allocation(_advisorsAddress, 5, AllocationTypes.ADVISORS));      // 5% to Advisors
+        allocations.push(Allocation(_investorsAddress, 5, AllocationTypes.INVESTORS));    // 5% to Investors
+        allocations.push(Allocation(_airdropsAddress, 40, AllocationTypes.AIRDROPS));     // 40% to Airdrops/Rewards
+        allocations.push(Allocation(_ecosystemAddress, 10, AllocationTypes.ECOSYSTEM));   // 10% to Ecosystem Development
+        allocations.push(Allocation(_treasuryAddress, 10, AllocationTypes.TREASURY));     // 10% to Treasury Reserve
+        allocations.push(Allocation(_publicSaleAddress, 10, AllocationTypes.PUBLIC_SALE));// 10% to Public Sale/DEX Liquidity
+        allocations.push(Allocation(_escrowAddress, 10, AllocationTypes.ESCROW));         // 10% to Long-Term Escrow
         
         // Validate total allocation equals 100%
         uint8 totalAllocation = 0;
@@ -92,18 +107,14 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
             uint256 amount = (INITIAL_SUPPLY * allocations[i].percentage) / 100;
             _mint(allocations[i].recipient, amount);
             
-            // Emit event with allocation name
-            string memory allocationName;
-            if (i == 0) allocationName = "Founder";
-            else if (i == 1) allocationName = "Advisors";
-            else if (i == 2) allocationName = "Investors";
-            else if (i == 3) allocationName = "Airdrops/Rewards";
-            else if (i == 4) allocationName = "Ecosystem Development";
-            else if (i == 5) allocationName = "Treasury Reserve";
-            else if (i == 6) allocationName = "Public Sale/DEX Liquidity";
-            else if (i == 7) allocationName = "Long-Term Escrow";
-            
-            emit TokensAllocated(allocations[i].recipient, amount, allocationName);
+            // Emit event with allocation name and type
+            string memory allocationName = _getAllocationName(allocations[i].allocationType);
+            emit TokensAllocated(
+                allocations[i].recipient, 
+                amount, 
+                allocations[i].allocationType, 
+                allocationName
+            );
         }
     }
     
@@ -134,6 +145,9 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
      * - Total additional minting cannot exceed MAX_ADDITIONAL_MINTING
      */
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+        require(to != address(0), "Cannot mint to zero address");
+        require(amount > 0, "Amount must be greater than zero");
+        
         // Check if additional minting exceeds the cap
         require(totalMintedAdditional + amount <= MAX_ADDITIONAL_MINTING, "Exceeds maximum additional minting cap");
         
@@ -147,17 +161,45 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
      * @dev Returns all allocation addresses and percentages
      * @return recipients Array of recipient addresses
      * @return percentages Array of allocation percentages
+     * @return types Array of allocation types
      */
-    function getAllocations() external view returns (address[] memory recipients, uint8[] memory percentages) {
+    function getAllocations() external view returns (
+        address[] memory recipients, 
+        uint8[] memory percentages,
+        AllocationTypes[] memory types
+    ) {
         recipients = new address[](allocations.length);
         percentages = new uint8[](allocations.length);
+        types = new AllocationTypes[](allocations.length);
         
         for (uint i = 0; i < allocations.length; i++) {
             recipients[i] = allocations[i].recipient;
             percentages[i] = allocations[i].percentage;
+            types[i] = allocations[i].allocationType;
         }
         
-        return (recipients, percentages);
+        return (recipients, percentages, types);
+    }
+    
+    /**
+     * @dev Returns the remaining amount that can be minted
+     * @return uint256 The remaining amount that can be minted
+     */
+    function remainingMintCap() external view returns (uint256) {
+        return MAX_ADDITIONAL_MINTING - totalMintedAdditional;
+    }
+    
+    /**
+     * @dev Allows an admin to renounce a role from an account safely
+     * @param role The role to renounce
+     * @param account The account to remove the role from
+     * Requirements:
+     * - Caller must have the DEFAULT_ADMIN_ROLE
+     */
+    function safeRenounceRole(bytes32 role, address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != address(0), "Cannot renounce role from zero address");
+        revokeRole(role, account);
+        emit RoleRenounced(role, account);
     }
     
     /**
@@ -174,5 +216,22 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
         override
     {
         super._beforeTokenTransfer(from, to, amount);
+    }
+    
+    /**
+     * @dev Internal helper function to get the allocation name from the allocation type
+     * @param allocationType The allocation type enum
+     * @return The string representation of the allocation type
+     */
+    function _getAllocationName(AllocationTypes allocationType) internal pure returns (string memory) {
+        if (allocationType == AllocationTypes.FOUNDER) return "Founder";
+        if (allocationType == AllocationTypes.ADVISORS) return "Advisors";
+        if (allocationType == AllocationTypes.INVESTORS) return "Investors";
+        if (allocationType == AllocationTypes.AIRDROPS) return "Airdrops/Rewards";
+        if (allocationType == AllocationTypes.ECOSYSTEM) return "Ecosystem Development";
+        if (allocationType == AllocationTypes.TREASURY) return "Treasury Reserve";
+        if (allocationType == AllocationTypes.PUBLIC_SALE) return "Public Sale/DEX Liquidity";
+        if (allocationType == AllocationTypes.ESCROW) return "Long-Term Escrow";
+        return "Unknown";
     }
 }

@@ -1,26 +1,74 @@
 {
   "name": "reska-token",
   "version": "1.0.0",
-  "description": "",
+  "description": "RESEARKA (RESKA) ERC-20 token for a decentralized academic publishing platform",
   "main": "index.js",
   "scripts": {
-    "test": "HARDHAT_NETWORK=hardhat npx mocha --require hardhat/register --reporter min test/*.js",
-    "test:simple": "npx mocha test/simple.test.js",
-    "compile": "node scripts/direct-compile.js",
-    "deploy": "hardhat run scripts/deploy.js"
+    "test": "hardhat test",
+    "test:local": "HARDHAT_NETWORK=hardhat npx mocha --require hardhat/register test/reskatoken-local.test.js",
+    "test:coverage": "hardhat coverage",
+    "compile": "hardhat compile",
+    "lint": "npm run lint:sol && npm run lint:js",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "lint:js": "eslint '**/*.js'",
+    "format": "prettier --write 'contracts/**/*.sol' '**/*.js'",
+    "deploy:local": "hardhat run scripts/deploy-local.js",
+    "deploy:goerli": "hardhat run scripts/deploy.js --network goerli",
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network mainnet",
+    "deploy:zksync-testnet": "hardhat run scripts/deploy.js --network zkSyncTestnet",
+    "verify": "hardhat verify",
+    "node": "node scripts/start-node.js",
+    "gas-report": "REPORT_GAS=true hardhat test",
+    "cleanup": "node scripts/cleanup.js",
+    "prepare": "husky install"
   },
-  "keywords": [],
+  "keywords": [
+    "ethereum",
+    "erc20",
+    "token",
+    "zksync",
+    "research",
+    "academic"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-etherscan": "^3.1.8",
     "@nomiclabs/hardhat-waffle": "^2.0.6",
     "@openzeppelin/contracts": "^4.8.2",
     "chai": "^4.3.7",
     "dotenv": "^16.5.0",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-promise": "^7.2.1",
     "ethereum-waffle": "^4.0.10",
     "ethers": "^5.8.0",
     "hardhat": "^2.17.0",
-    "solc": "^0.8.17"
+    "hardhat-gas-reporter": "^2.2.3",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.5.1",
+    "prettier": "^3.5.3",
+    "prettier-plugin-solidity": "^1.4.2",
+    "solc": "^0.8.17",
+    "solhint": "^5.0.5",
+    "solidity-coverage": "^0.8.15"
+  },
+  "lint-staged": {
+    "*.sol": [
+      "prettier --write",
+      "solhint"
+    ],
+    "*.js": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }
