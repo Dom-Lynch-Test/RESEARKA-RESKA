@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Custom Errors
 error ZeroAddress();
@@ -19,7 +20,7 @@ error RenounceRoleZeroAddress();
  * @dev ERC20 token with role-based access control, pausable functionality, and allocation tracking
  * @custom:security-contact security@researka.com
  */
-contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
+contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl, ReentrancyGuard {
     // Roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -152,7 +153,7 @@ contract ReskaToken is ERC20, ERC20Burnable, Pausable, AccessControl {
      * - Caller must have the MINTER_ROLE
      * - Total additional minting cannot exceed MAX_ADDITIONAL_MINTING
      */
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) nonReentrant {
         if (to == address(0)) revert MintToZeroAddress();
         if (amount == 0) revert AmountMustBePositive(); // Use == 0 for positive check
         

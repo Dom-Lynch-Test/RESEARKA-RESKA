@@ -18,6 +18,7 @@ error ScheduleAlreadyRevoked();
 error IndexOutOfBounds();
 error NotBeneficiary();
 error NoTokensToRelease();
+error CannotWithdrawVestedTokens();
 
 /**
  * @title ReskaTokenVesting
@@ -304,11 +305,14 @@ contract ReskaTokenVesting is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Withdraw tokens from the contract
+     * @dev Withdraws non-vested tokens in case of emergency
      * @param amount The amount of tokens to withdraw
      */
     function withdraw(uint256 amount) external onlyOwner nonReentrant {
-        require(amount <= _token.balanceOf(address(this)) - vestingSchedulesTotalAmount, "TokenVesting: cannot withdraw vested tokens");
+        // Check that there are enough non-vested tokens to withdraw
+        if (amount > _token.balanceOf(address(this)) - vestingSchedulesTotalAmount) revert CannotWithdrawVestedTokens();
+        
+        // Transfer tokens to the owner
         _token.safeTransfer(owner(), amount);
     }
 
