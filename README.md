@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/Dom-Lynch-Test/RESEARKA-RESKA/actions/workflows/ci.yml/badge.svg)](https://github.com/Dom-Lynch-Test/RESEARKA-RESKA/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Dom-Lynch-Test/RESEARKA-RESKA/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/Dom-Lynch-Test/RESEARKA-RESKA)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Solidity](https://img.shields.io/badge/Solidity-%5E0.8.17-blue.svg)](https://soliditylang.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-%5E0.8.20-blue.svg)](https://soliditylang.org/)
 [![zkSync Ready](https://img.shields.io/badge/zkSync-Ready-brightgreen.svg)](https://zksync.io/)
 [![NPM Version](https://img.shields.io/npm/v/your-package-name.svg)](https://www.npmjs.com/package/your-package-name)
 [![ESLint](https://img.shields.io/badge/eslint-enabled-brightgreen.svg)](.eslintrc.js)
@@ -30,9 +30,13 @@ RESEARKA (RESKA) is an ERC-20 token designed for a decentralized academic publis
 
 - **Name**: RESEARKA
 - **Symbol**: RESKA
-- **Decimals**: 18
+- **Decimals**: 6 (like USDT, not the standard ERC-20 default of 18)
 - **Initial Supply**: 1,000,000,000 tokens (1 billion)
 - **Additional Minting Cap**: 500,000,000 tokens (500 million)
+
+⚠️ **IMPORTANT**: Unlike most ERC-20 tokens that use 18 decimals, RESKA uses **6 decimals** (similar to USDT). 
+Developers, exchanges, wallets, and integrators must adjust their calculations accordingly to avoid precision errors.
+When using ethers.js, always use `ethers.parseUnits("amount", 6)` and `ethers.formatUnits(amount, 6)` instead of `parseEther`/`formatEther`.
 
 ## Token Allocation
 
@@ -166,6 +170,54 @@ The project uses Husky and lint-staged to automatically lint and format code bef
    ```bash
    npm run cleanup
    ```
+
+### Using Hardhat
+
+For local development and testing:
+
+```bash
+# Install dependencies
+npm install
+
+# Compile contracts
+npx hardhat compile
+
+# Run tests
+npx hardhat test
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
+```
+
+### Local Deployment & Verification
+
+Use these commands to deploy and verify the token locally:
+
+```bash
+# Start a local Hardhat node (in a separate terminal)
+npx hardhat node
+
+# Deploy token to local node
+npx hardhat run scripts/deploy-local.js --network localhost
+
+# Verify token deployment and test functionality
+npx hardhat run scripts/verify-local-deployment.js --network localhost
+```
+
+### zkSync Deployment
+
+Preparing for zkSync deployment (testing before production):
+
+```bash
+# This requires funded wallet for gas fees
+# See .env.example for required environment variables
+npx hardhat run scripts/deploy-zksync.js --network zkSyncTestnet
+```
+
+## Interacting with the Contracts
 
 ### Deployment
 
