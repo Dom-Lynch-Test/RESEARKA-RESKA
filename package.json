@@ -1,0 +1,26 @@
+{
+  "name": "reska-token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "HARDHAT_NETWORK=hardhat npx mocha --require hardhat/register --reporter min test/*.js",
+    "test:simple": "npx mocha test/simple.test.js",
+    "compile": "node scripts/direct-compile.js",
+    "deploy": "hardhat run scripts/deploy.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "@openzeppelin/contracts": "^4.8.2",
+    "chai": "^4.3.7",
+    "dotenv": "^16.5.0",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.8.0",
+    "hardhat": "^2.17.0",
+    "solc": "^0.8.17"
+  }
+}
