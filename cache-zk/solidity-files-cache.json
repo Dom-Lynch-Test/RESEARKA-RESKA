@@ -25,21 +25,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -87,21 +83,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -143,21 +135,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -201,21 +189,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -262,21 +246,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -322,21 +302,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -381,21 +357,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -437,21 +409,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -493,21 +461,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -552,21 +516,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -610,21 +570,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -666,21 +622,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -722,21 +674,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -778,21 +726,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -834,21 +778,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -892,21 +832,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -952,21 +888,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -1008,21 +940,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -1064,21 +992,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
@@ -1124,21 +1048,17 @@
               ]
             }
           },
-          "detectMissingLibraries": false,
-          "forceEVMLA": false,
-          "enableEraVMExtensions": false,
           "libraries": {}
         },
-        "eraVersion": "1.0.1",
         "zksolc": {
-          "version": "1.5.12",
+          "version": "1.3.14",
           "compilerSource": "binary",
           "settings": {
             "optimizer": {
               "enabled": true,
               "mode": "3"
             },
-            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.5.12",
+            "compilerPath": "/Users/dom12/Library/Caches/hardhat-nodejs/compilers-v2/zksolc/zksolc-v1.3.14",
             "missingLibrariesPath": "./.zksolc-libraries-cache/missingLibraryDependencies.json",
             "areLibrariesMissing": false,
             "experimental": {},
