@@ -38,7 +38,8 @@ async function deployVestingFixture() {
   const ONE_YEAR = 365 * ONE_DAY;
   
   // Transfer tokens to the vesting contract
-  await token.transfer(vesting.address, VESTING_AMOUNT);
+  const vestingAddress = await vesting.getAddress();
+  await token.transfer(vestingAddress, VESTING_AMOUNT);
   
   return { 
     token, 

@@ -16,14 +16,16 @@ describe("MinimalReskaTokenVesting", function() {
     it("should receive the correct vesting amount", async function() {
       const { token, vesting, constants } = await loadFixture(deployVestingFixture);
       
-      const vestingBalance = await token.balanceOf(vesting.address);
+      const vestingAddress = await vesting.getAddress();
+      const vestingBalance = await token.balanceOf(vestingAddress);
       expect(vestingBalance).to.equal(constants.VESTING_AMOUNT);
     });
     
     it("should expose the token address", async function() {
       const { token, vesting } = await loadFixture(deployVestingFixture);
       
-      expect(await vesting.getToken()).to.equal(token.address);
+      const tokenAddress = await token.getAddress();
+      expect(await vesting.getToken()).to.equal(tokenAddress);
     });
   });
   
@@ -41,7 +43,7 @@ describe("MinimalReskaTokenVesting", function() {
       const revocable = true;
       
       const tx = await vesting.createVestingSchedule(
-        beneficiary1.address,
+        await beneficiary1.getAddress(),
         startTime,
         cliff,
         duration,
@@ -53,17 +55,17 @@ describe("MinimalReskaTokenVesting", function() {
       // Check event emission
       await expect(tx)
         .to.emit(vesting, "VestingScheduleCreated")
-        .withArgs(beneficiary1.address, amount);
+        .withArgs(await beneficiary1.getAddress(), amount);
       
       // Verify schedule exists
       const scheduleId = await vesting.computeVestingScheduleIdForAddressAndIndex(
-        beneficiary1.address,
+        await beneficiary1.getAddress(),
         0
       );
       
       // Get the schedule and verify its properties
       const schedule = await vesting.getVestingSchedule(scheduleId);
-      expect(schedule.beneficiary).to.equal(beneficiary1.address);
+      expect(schedule.beneficiary).to.equal(await beneficiary1.getAddress());
       expect(schedule.amountTotal).to.equal(amount);
     });
   });
