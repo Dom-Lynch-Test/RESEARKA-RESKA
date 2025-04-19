@@ -1,3 +1,7 @@
+// Place zkSync plugins at the top of the file
+require("@matterlabs/hardhat-zksync");
+
+// Standard Hardhat plugins
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 require("solidity-coverage");
@@ -15,6 +19,15 @@ module.exports = {
       }
     }
   },
+  zksolc: {
+    version: "1.3.13",
+    compilerSource: "binary",
+    settings: {
+      optimizer: {
+        enabled: true,
+      },
+    },
+  },
   networks: {
     hardhat: {
       chainId: 1337
@@ -28,34 +41,39 @@ module.exports = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
     zkSyncTestnet: {
-      url: process.env.ZKSYNC_TESTNET_URL || "https://zksync2-testnet.zksync.dev",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+      url: process.env.ZKSYNC_TESTNET_URL || "https://testnet.era.zksync.dev",
+      ethNetwork: "goerli", // underlying L1 network
+      zksync: true,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
     zkSyncMainnet: {
       url: process.env.ZKSYNC_MAINNET_URL || "https://mainnet.era.zksync.io",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+      ethNetwork: "mainnet", // underlying L1 network
+      zksync: true,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     }
   },
   // Named accounts for deployment scripts
   namedAccounts: {
     deployer: {
-      default: 0, // First account by default
-      1: process.env.WALLET_ADDRESS, // Mainnet
-      5: process.env.WALLET_ADDRESS, // Goerli
-    },
+      default: 0
+    }
   },
-  // Gas reporter configuration - Re-enabled
+  // For gas reporting
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: process.env.REPORT_GAS ? true : false,
     currency: "USD",
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-    token: "ETH",
-    gasPriceApi: "https://api.etherscan.io/api?module=proxy&action=eth_gasPrice",
-    showTimeSpent: true,
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY
   },
-  // Configure mocha for testing
-  mocha: {
-    timeout: 40000,
-    reporter: 'spec' // More detailed reporter for better test output
+  // For contract verification
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  },
+  // Set paths for artifacts
+  paths: {
+    artifacts: "./artifacts",
+    cache: "./cache",
+    sources: "./contracts",
+    tests: "./test"
   }
 };
