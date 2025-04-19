@@ -1,12 +1,36 @@
-# RESEARKA Token
+# RESEARKA Token (RESKA)
 
-RESEARKA Token (symbol: RESKA) is an ERC-20 token with the following features:
+RESEARKA (RESKA) is an ERC-20 token designed for a decentralized academic publishing platform with future plans for zkSync integration. It aligns incentives across the entire research lifecycle—rewarding authors, reviewers, and the community—while ensuring transparency and efficiency.
+
+## Features
 
 - Role-based access control (PAUSER_ROLE, MINTER_ROLE)
 - Pausable functionality to halt transfers in emergency situations
 - Minting functionality with a cap on additional minting
 - Token allocation percentages for various stakeholders
-- Future zkSync integration for Layer 2 scaling
+- Future zkSync integration for Layer 2 scaling (sub-cent gas fees and high throughput)
+
+## Token Specifications
+
+- **Name**: RESEARKA
+- **Symbol**: RESKA
+- **Decimals**: 18
+- **Initial Supply**: 1,000,000,000 tokens (1 billion)
+- **Additional Minting Cap**: 500,000,000 tokens (500 million)
+
+## Token Allocation
+
+| Allocation Category                  | Percentage | 
+|--------------------------------------|-----------:|
+| Founder                              |       10 % |
+| Advisors                             |        5 % |
+| Investors                            |        5 % |
+| Airdrops/Rewards                     |       40 % |
+| Ecosystem Development                |       10 % |
+| Treasury Reserve                     |       10 % |
+| Public Sale/DEX Liquidity            |       10 % |
+| Long-Term Escrow                     |       10 % |
+| **Total**                            |     **100 %** |
 
 ## Project Structure
 
@@ -28,26 +52,6 @@ reska-token/
 ├── hardhat.config.js        # Hardhat configuration
 └── package.json             # Project dependencies
 ```
-
-## Token Specifications
-
-- **Name**: RESEARKA
-- **Symbol**: RESKA
-- **Decimals**: 18
-- **Initial Supply**: 1,000,000,000 tokens (1 billion)
-- **Additional Minting Cap**: 500,000,000 tokens (500 million)
-
-## Token Allocation
-
-The token has the following allocation:
-- Founder: 10%
-- Advisors: 5%
-- Investors: 5%
-- Airdrops/Rewards: 40%
-- Ecosystem Development: 10%
-- Treasury Reserve: 10%
-- Public Sale/DEX Liquidity: 10%
-- Long-Term Escrow: 10%
 
 ## Development
 
@@ -122,6 +126,7 @@ The token has the following allocation:
    - Vesting mechanisms for specific allocations
    - Governance functionality
    - Staking capabilities
+   - Dynamic fee mechanism via Chainlink oracles
 
 ## License
 
