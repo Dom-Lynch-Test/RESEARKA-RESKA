@@ -1,11 +1,12 @@
 const { expect } = require("chai");
-const { ethers } = require("ethers");
+const { ethers } = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 
 // Constants for testing
-const TOTAL_SUPPLY = ethers.parseEther("1000000000"); // 1 billion tokens
-const TRANSFER_AMOUNT = ethers.parseEther("50"); // 50 tokens for testing
+const DECIMALS = 6; // Token uses 6 decimals like USDT
+const TOTAL_SUPPLY = ethers.parseUnits("1000000000", DECIMALS); // 1 billion tokens with 6 decimals
+const TRANSFER_AMOUNT = ethers.parseUnits("50", DECIMALS); // 50 tokens for testing
 const FOUNDER_PERCENTAGE = 10;
 const ADVISORS_PERCENTAGE = 5;
 const INVESTORS_PERCENTAGE = 5;
@@ -103,11 +104,11 @@ describe("ReskaToken (Local)", function() {
     it("should have the correct initial supply", async function() {
       const totalSupply = await reskaToken.totalSupply();
       expect(totalSupply.toString()).to.equal(TOTAL_SUPPLY.toString());
-      console.log(`Total supply: ${ethers.formatEther(totalSupply)} RESKA`);
+      console.log(`Total supply: ${ethers.formatUnits(totalSupply, DECIMALS)} RESKA`);
     });
     
     it("should have the correct decimals", async function() {
-      expect(await reskaToken.decimals()).to.equal(18);
+      expect(await reskaToken.decimals()).to.equal(DECIMALS);
     });
   });
   
@@ -140,7 +141,7 @@ describe("ReskaToken (Local)", function() {
       const deployerBalance = await reskaToken.balanceOf(deployer);
       // Just verify the deployer has tokens, don't check exact amount
       expect(deployerBalance.gt(0)).to.equal(true);
-      console.log(`Deployer balance: ${ethers.formatEther(deployerBalance)} RESKA`);
+      console.log(`Deployer balance: ${ethers.formatUnits(deployerBalance, DECIMALS)} RESKA`);
     });
   });
   
@@ -178,7 +179,7 @@ describe("ReskaToken (Local)", function() {
     
     it("should fail when trying to transfer more than balance", async function() {
       const user1Balance = await reskaToken.balanceOf(user1);
-      const exceedingAmount = user1Balance.add(ethers.parseEther("1"));
+      const exceedingAmount = user1Balance.add(ethers.parseUnits("1", DECIMALS));
       
       const user1Contract = reskaToken.connect(user1Signer);
       
@@ -223,7 +224,7 @@ describe("ReskaToken (Local)", function() {
       const user1Contract = reskaToken.connect(user1Signer);
       
       await expect(
-        user1Contract.mint(user1, ethers.parseEther("1000"))
+        user1Contract.mint(user1, ethers.parseUnits("1000", DECIMALS))
       ).to.be.reverted;
     });
     
@@ -298,7 +299,7 @@ describe("ReskaToken (Local)", function() {
     it("should allow minting up to the additional cap", async function() {
       const initialSupply = await reskaToken.totalSupply();
       const additionalMinted = await reskaToken.totalMintedAdditional();
-      const additionalCap = ethers.parseEther("500000000"); // 500 million tokens
+      const additionalCap = ethers.parseUnits("500000000", DECIMALS); // 500 million tokens
       
       // Skip the test if the cap has already been reached
       if (additionalMinted.gte(additionalCap)) {
@@ -308,7 +309,7 @@ describe("ReskaToken (Local)", function() {
       }
       
       // Calculate a small amount to mint that won't exceed the cap
-      const mintAmount = ethers.parseEther("1"); // Just 1 token
+      const mintAmount = ethers.parseUnits("1", DECIMALS); // Just 1 token
       
       // Mint a small amount
       await expect(
@@ -327,7 +328,7 @@ describe("ReskaToken (Local)", function() {
     
     it("should track additional minted amount correctly", async function() {
       const additionalMinted = await reskaToken.totalMintedAdditional();
-      const additionalCap = ethers.parseEther("500000000"); // 500 million tokens
+      const additionalCap = ethers.parseUnits("500000000", DECIMALS); // 500 million tokens
       
       // Skip the test if the cap has already been reached
       if (additionalMinted.gte(additionalCap)) {
@@ -337,7 +338,7 @@ describe("ReskaToken (Local)", function() {
       }
       
       // Calculate a small amount to mint that won't exceed the cap
-      const mintAmount = ethers.parseEther("1"); // Just 1 token
+      const mintAmount = ethers.parseUnits("1", DECIMALS); // Just 1 token
       
       const initialAdditionalMinted = await reskaToken.totalMintedAdditional();
       
@@ -354,9 +355,9 @@ describe("ReskaToken (Local)", function() {
     it("should prevent minting beyond the additional cap", async function() {
       // The cap is 500 million tokens, so try to mint more than what's left
       const additionalMinted = await reskaToken.totalMintedAdditional();
-      const additionalCap = ethers.parseEther("500000000"); // 500 million tokens
+      const additionalCap = ethers.parseUnits("500000000", DECIMALS); // 500 million tokens
       const remainingCap = additionalCap.sub(additionalMinted);
-      const exceedingAmount = remainingCap.add(ethers.parseEther("1"));
+      const exceedingAmount = remainingCap.add(ethers.parseUnits("1", DECIMALS));
       
       await expect(
         reskaToken.mint(user2, exceedingAmount)
@@ -365,7 +366,7 @@ describe("ReskaToken (Local)", function() {
     
     it("should prevent minting to the zero address", async function() {
       await expect(
-        reskaToken.mint(ethers.ZeroAddress, ethers.parseEther("1"))
+        reskaToken.mint(ethers.ZeroAddress, ethers.parseUnits("1", DECIMALS))
       ).to.be.revertedWithCustomError(reskaToken, "CannotMintToZeroAddress"); // Updated custom error check
     });
     
@@ -377,7 +378,7 @@ describe("ReskaToken (Local)", function() {
     
     it("should return the correct remaining mint cap", async function() {
       const additionalMinted = await reskaToken.totalMintedAdditional();
-      const additionalCap = ethers.parseEther("500000000"); // 500 million tokens
+      const additionalCap = ethers.parseUnits("500000000", DECIMALS); // 500 million tokens
       const expectedRemaining = additionalCap.sub(additionalMinted);
       
       const remainingCap = await reskaToken.remainingMintCap();

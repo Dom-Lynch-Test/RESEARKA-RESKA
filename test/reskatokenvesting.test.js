@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const hre = require("hardhat");
 
 describe("ReskaTokenVesting", function() {
   let ReskaToken;
@@ -12,20 +13,26 @@ describe("ReskaTokenVesting", function() {
   let addrs;
 
   // Constants for testing
-  const INITIAL_SUPPLY = ethers.parseEther("1000000000"); // 1 billion tokens
-  const VESTING_AMOUNT_1 = ethers.parseEther("10000000"); // 10 million tokens
-  const VESTING_AMOUNT_2 = ethers.parseEther("5000000"); // 5 million tokens
+  const INITIAL_SUPPLY = ethers.parseUnits("1000000000", 6); // 1 billion tokens with 6 decimals
+  const VESTING_AMOUNT_1 = ethers.parseUnits("10000000", 6); // 10 million tokens with 6 decimals
+  const VESTING_AMOUNT_2 = ethers.parseUnits("5000000", 6); // 5 million tokens with 6 decimals
   const ONE_MONTH = 30 * 24 * 60 * 60; // 30 days in seconds
   const ONE_YEAR = 365 * 24 * 60 * 60; // 1 year in seconds
   const ONE_DAY = 24 * 60 * 60; // 1 day in seconds
+
+  // Make sure the correct contracts get loaded
+  before(async function() {
+    // Force a fresh compile
+    await hre.run('compile');
+  });
 
   beforeEach(async function() {
     // Get signers
     [owner, beneficiary1, beneficiary2, ...addrs] = await ethers.getSigners();
 
     // Deploy ReskaToken
-    ReskaToken = await ethers.getContractFactory("ReskaToken");
-    reskaToken = await ReskaToken.deploy(
+    const ReskaTokenFactory = await ethers.getContractFactory("ReskaToken");
+    reskaToken = await ReskaTokenFactory.deploy(
       owner.address, // founder
       owner.address, // advisors
       owner.address, // investors
@@ -37,11 +44,12 @@ describe("ReskaTokenVesting", function() {
     );
 
     // Deploy ReskaTokenVesting
-    ReskaTokenVesting = await ethers.getContractFactory("ReskaTokenVesting");
-    reskaTokenVesting = await ReskaTokenVesting.deploy(reskaToken.address);
+    const ReskaTokenVestingFactory = await ethers.getContractFactory("ReskaTokenVesting");
+    reskaTokenVesting = await ReskaTokenVestingFactory.deploy(reskaToken.address);
 
     // Transfer tokens to the vesting contract
-    await reskaToken.transfer(reskaTokenVesting.address, VESTING_AMOUNT_1 + VESTING_AMOUNT_2);
+    const totalVestingAmount = VESTING_AMOUNT_1.add(VESTING_AMOUNT_2);
+    await reskaToken.transfer(reskaTokenVesting.address, totalVestingAmount);
   });
 
   describe("Deployment", function() {
@@ -55,7 +63,7 @@ describe("ReskaTokenVesting", function() {
 
     it("Should have the correct token balance", async function() {
       const balance = await reskaToken.balanceOf(reskaTokenVesting.address);
-      expect(balance).to.equal(VESTING_AMOUNT_1 + VESTING_AMOUNT_2);
+      expect(balance).to.equal(VESTING_AMOUNT_1.add(VESTING_AMOUNT_2));
     });
   });
 
@@ -296,7 +304,7 @@ describe("ReskaTokenVesting", function() {
     it("Should not allow withdrawing more than non-vested tokens", async function() {
       // Try to withdraw more than non-vested tokens
       await expect(
-        reskaTokenVesting.withdraw(VESTING_AMOUNT_1 + VESTING_AMOUNT_2)
+        reskaTokenVesting.withdraw(VESTING_AMOUNT_1.add(VESTING_AMOUNT_2))
       ).to.be.revertedWith("TokenVesting: cannot withdraw vested tokens");
     });
   });

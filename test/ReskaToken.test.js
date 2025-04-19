@@ -40,7 +40,7 @@ describe("ReskaToken", function () {
     });
 
     it("Should have the correct initial supply", async function () {
-      const expectedSupply = ethers.parseEther("1000000000"); // 1 billion tokens
+      const expectedSupply = ethers.parseUnits("1000000000", 6); // 1 billion tokens with 6 decimals
       expect(await reskaToken.totalSupply()).to.equal(expectedSupply);
     });
 
@@ -124,7 +124,7 @@ describe("ReskaToken", function () {
   describe("Minting", function () {
     it("Should allow minting up to the additional cap", async function () {
       const initialSupply = await reskaToken.totalSupply();
-      const additionalAmount = ethers.parseEther("500000000"); // 500 million tokens
+      const additionalAmount = ethers.parseUnits("500000000", 6); // 500 million tokens with 6 decimals
       
       // Mint additional tokens
       await reskaToken.mint(addr1.address, additionalAmount);
@@ -135,7 +135,7 @@ describe("ReskaToken", function () {
     });
 
     it("Should not allow minting beyond the additional cap", async function () {
-      const tooMuch = ethers.parseEther("500000001"); // 500 million + 1 tokens
+      const tooMuch = ethers.parseUnits("500000001", 6); // 500 million + 1 tokens with 6 decimals
       
       // Try to mint too many tokens
       await expect(

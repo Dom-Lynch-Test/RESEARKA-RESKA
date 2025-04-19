@@ -1,7 +1,5 @@
 const { expect } = require("chai");
-const { ethers } = require("ethers");
-const fs = require("fs");
-const path = require("path");
+const { ethers } = require("hardhat");
 
 describe("ReskaToken", function() {
   let ReskaToken;
@@ -11,50 +9,33 @@ describe("ReskaToken", function() {
   let addr2;
   
   before(async function() {
-    // Load compiled contract
-    const artifactPath = path.resolve(__dirname, "../artifacts/ReskaToken.json");
-    const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+    // Get the signers
+    [owner, addr1, addr2] = await ethers.getSigners();
     
-    // Get contract ABI and bytecode
-    const contractOutput = artifact.contracts["ReskaToken.sol"].ReskaToken;
-    const abi = contractOutput.abi;
-    const bytecode = contractOutput.evm.bytecode.object;
+    // Get the contract factory
+    const ReskaTokenFactory = await ethers.getContractFactory("ReskaToken");
     
-    // Set up provider and signers
-    const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+    // Addresses for token allocations
+    const founderAddress = owner.address;
+    const advisorsAddress = owner.address;
+    const investorsAddress = owner.address;
+    const airdropsAddress = owner.address;
+    const ecosystemAddress = owner.address;
+    const treasuryAddress = owner.address;
+    const publicSaleAddress = owner.address;
+    const escrowAddress = owner.address;
     
-    // Try to get signers - this will fail if Hardhat node is not running
-    try {
-      const signers = await provider.listAccounts();
-      if (signers.length === 0) {
-        console.log("No accounts found. Make sure Hardhat node is running with 'npx hardhat node'");
-        this.skip();
-      }
-      
-      owner = new ethers.Wallet(ethers.Wallet.createRandom().privateKey, provider);
-      addr1 = new ethers.Wallet(ethers.Wallet.createRandom().privateKey, provider);
-      addr2 = new ethers.Wallet(ethers.Wallet.createRandom().privateKey, provider);
-      
-      // Create contract factory
-      const factory = new ethers.ContractFactory(abi, bytecode, owner);
-      
-      // Deploy contract
-      reskaToken = await factory.deploy(
-        owner.address, // founder
-        owner.address, // advisors
-        owner.address, // investors
-        owner.address, // airdrops
-        owner.address, // ecosystem
-        owner.address, // treasury
-        owner.address, // publicSale
-        owner.address  // escrow
-      );
-      
-      await reskaToken.deployed();
-    } catch (error) {
-      console.log("Error setting up test environment:", error.message);
-      this.skip();
-    }
+    // Deploy the contract
+    reskaToken = await ReskaTokenFactory.deploy(
+      founderAddress,
+      advisorsAddress,
+      investorsAddress,
+      airdropsAddress,
+      ecosystemAddress,
+      treasuryAddress,
+      publicSaleAddress,
+      escrowAddress
+    );
   });
   
   // Basic test that doesn't require contract deployment
@@ -71,12 +52,12 @@ describe("ReskaToken", function() {
     });
     
     it("should have the correct name and symbol", async function() {
-      expect(await reskaToken.name()).to.equal("RESKA Token");
+      expect(await reskaToken.name()).to.equal("RESEARKA");
       expect(await reskaToken.symbol()).to.equal("RESKA");
     });
     
     it("should have the correct initial supply", async function() {
-      const expectedSupply = ethers.utils.parseEther("1000000000"); // 1 billion tokens
+      const expectedSupply = ethers.parseUnits("1000000000", 6); // 1 billion tokens with 6 decimals
       expect(await reskaToken.totalSupply()).to.equal(expectedSupply);
     });
   });
