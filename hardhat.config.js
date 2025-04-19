@@ -13,6 +13,9 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x000000000000000000000000000000
 const ZKSYNC_TESTNET_URL = process.env.ZKSYNC_TESTNET_URL || "https://sepolia.era.zksync.dev";
 const SEPOLIA_URL = process.env.SEPOLIA_URL || "https://rpc.sepolia.org";
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
+// Added mainnet configuration values
+const ZKSYNC_MAINNET_URL = process.env.ZKSYNC_MAINNET_URL || "https://mainnet.era.zksync.io";
+const ETHEREUM_MAINNET_URL = process.env.ETHEREUM_MAINNET_URL || "https://ethereum.publicnode.com";
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -51,6 +54,17 @@ module.exports = {
       zksync: true,
       accounts: [PRIVATE_KEY],
       verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
+    },
+    // zkSync Era Mainnet configuration
+    zkSyncMainnet: {
+      url: ZKSYNC_MAINNET_URL,
+      ethNetwork: ETHEREUM_MAINNET_URL, // Ethereum mainnet as L1
+      zksync: true,
+      accounts: [PRIVATE_KEY],
+      verifyURL: 'https://explorer.era.zksync.io/contract_verification',
+      // Gas price and gas limit adjusted for mainnet
+      gasPrice: 250000000, // 0.25 Gwei
+      timeout: 120000 // 2 minutes timeout for transactions
     },
     // Sepolia testnet for L1 interactions (replacing Goerli)
     sepolia: {
