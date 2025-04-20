@@ -506,6 +506,69 @@ describe("RESKA Token Vesting Integration Tests", function() {
   });
   
   /**
+   * Test time-based vesting releases across all schedules
+   */
+  it("should handle all schedules over time correctly", async function() {
+    const { vesting, token, founder, advisors, airdrops, ecosystem, treasury, escrow, startTime, scheduleIds } = 
+      await loadFixture(deployReskaTokenSystemFixture);
+    
+    // Define time points for testing - avoid variable shadowing by using 'offset' not 'time'
+    const timePoints = [
+      { label: "After 1 month", offset: MONTH_IN_SECONDS },
+      { label: "After 6 months", offset: MONTH_IN_SECONDS * 6 },
+      { label: "After 1 year (cliff end for founder/advisor/airdrop)", offset: YEAR_IN_SECONDS },
+      { label: "After 1 year + 3 months (1st advisor quarter)", offset: YEAR_IN_SECONDS + MONTH_IN_SECONDS * 3 },
+      { label: "After 1 year + 6 months (2nd advisor quarter)", offset: YEAR_IN_SECONDS + MONTH_IN_SECONDS * 6 },
+      { label: "After 1 year + 9 months (3rd advisor quarter)", offset: YEAR_IN_SECONDS + MONTH_IN_SECONDS * 9 },
+      { label: "After 2 years (full vesting for founder/advisor/ecosystem/treasury)", offset: YEAR_IN_SECONDS * 2 },
+      { label: "After 3 years (escrow cliff)", offset: YEAR_IN_SECONDS * 3 }
+    ];
+    
+    // Track released amounts
+    const released = {
+      founder: ethers.BigNumber.from(0),
+      advisors: ethers.BigNumber.from(0),
+      airdrops: ethers.BigNumber.from(0),
+      ecosystem: ethers.BigNumber.from(0),
+      treasury: ethers.BigNumber.from(0),
+      escrow: ethers.BigNumber.from(0)
+    };
+    
+    // Test each time point - proper destructuring to avoid shadowing
+    for (const { label, offset } of timePoints) {
+      // Fast forward time - using the proper time helper
+      await time.increaseTo(startTime + offset);
+      
+      // Check and record releasable for each allocation
+      await checkAndRelease("founder", founder, scheduleIds.founder, released);
+      await checkAndRelease("advisors", advisors, scheduleIds.advisors, released);
+      await checkAndRelease("airdrops", airdrops, scheduleIds.airdrops, released);
+      await checkAndRelease("ecosystem", ecosystem, scheduleIds.ecosystem, released);
+      await checkAndRelease("treasury", treasury, scheduleIds.treasury, released);
+      await checkAndRelease("escrow", escrow, scheduleIds.escrow, released);
+    }
+    
+    // Helper function to check and release tokens for a beneficiary
+    async function checkAndRelease(allocationName, beneficiary, scheduleId, releasedTracker) {
+      const releasable = await vesting.computeReleasableAmount(scheduleId);
+      
+      if (releasable.gt(0)) {
+        const balanceBefore = await token.balanceOf(beneficiary.address);
+        
+        // Release tokens
+        await vesting.connect(beneficiary).release(scheduleId, releasable);
+        
+        // Update released amount for tracking
+        releasedTracker[allocationName] = releasedTracker[allocationName].add(releasable);
+        
+        // Verify balance change
+        const balanceAfter = await token.balanceOf(beneficiary.address);
+        expect(balanceAfter).to.equal(balanceBefore.add(releasable));
+      }
+    }
+  });
+  
+  /**
    * Test pause functionality of the token
    */
   it("should handle pausing and unpausing correctly", async function() {
