@@ -11,7 +11,11 @@ require('dotenv').config();
 
 // Configuration
 const VALID_NETWORKS = ['zkSyncTestnet', 'zkSyncMainnet'];
-const NETWORK = process.argv[2];
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const NETWORK = args[0];
+const isDryRun = args.includes('--dry-run');
 
 // Centralized script paths
 const SCRIPTS = {
@@ -133,9 +137,16 @@ function createDeploymentsFile() {
  * @param {string} command - Command to execute
  * @param {Array<string>} args - Command arguments
  * @param {string} cwd - Working directory
+ * @param {boolean} dryRun - If true, only log the command without executing
  * @returns {Promise<{stdout: string, stderr: string}>} Promise with stdout and stderr
  */
-function executeCommand(command, args, cwd = process.cwd()) {
+function executeCommand(command, args, cwd = process.cwd(), dryRun = false) {
+  // In dry-run mode, just log the command and return a resolved promise
+  if (dryRun) {
+    console.log(`[DRY RUN] Would execute: ${command} ${args.join(' ')}`);
+    return Promise.resolve({ stdout: '[Dry run - no output]', stderr: '' });
+  }
+
   return new Promise((resolve, reject) => {
     console.log(`Executing: ${command} ${args.join(' ')}`);
     
@@ -203,7 +214,7 @@ async function deployAll() {
   try {
     // Validate network
     if (!NETWORK) {
-      throw new Error(`Network argument is required. Usage: node deploy-all.js [network]`);
+      throw new Error(`Network argument is required. Usage: node deploy-all.js [network] [--dry-run]`);
     }
     
     if (!VALID_NETWORKS.includes(NETWORK)) {
@@ -215,62 +226,71 @@ async function deployAll() {
     validateScripts();
     await validateHardhatTasks();
     
-    console.log(`\n=== STARTING RESKA TOKEN DEPLOYMENT ON ${NETWORK} ===\n`);
+    // Log dry-run mode if active
+    if (isDryRun) {
+      console.log(`\n=== DRY RUN MODE - NO TRANSACTIONS WILL BE SENT ===\n`);
+      console.log(`This is a simulation of the deployment process. All commands will be logged but not executed.`);
+      console.log(`Use this mode to verify the deployment steps before committing real funds.\n`);
+    }
+    
+    console.log(`\n=== STARTING RESKA TOKEN DEPLOYMENT ON ${NETWORK} ${isDryRun ? '(DRY RUN)' : ''} ===\n`);
     
     // Create deployments file
     createDeploymentsFile();
     
     // Step 1: Deploy token and vesting contracts
     console.log('\n=== STEP 1: DEPLOYING TOKEN AND VESTING CONTRACTS ===\n');
-    await executeCommand('npx', ['hardhat', SCRIPTS.deployZkSync, '--network', NETWORK]);
+    await executeCommand('npx', ['hardhat', SCRIPTS.deployZkSync, '--network', NETWORK], process.cwd(), isDryRun);
     
     // Step 2: Fund vesting contract
     console.log('\n=== STEP 2: FUNDING VESTING CONTRACT ===\n');
-    await executeCommand('node', [SCRIPTS.fundVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.fundVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
 
     // Step 3: Deploy founder vesting (50% immediate, 50% 1yr cliff)
     console.log('\n=== STEP 3: DEPLOYING FOUNDER VESTING SCHEDULE ===\n');
-    await executeCommand('node', [SCRIPTS.founderVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.founderVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 4: Deploy investor allocations (100% immediate)
     console.log('\n=== STEP 4: DEPLOYING INVESTOR ALLOCATIONS ===\n');
-    await executeCommand('node', [SCRIPTS.investorVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.investorVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 5: Deploy advisor vesting (1yr cliff + quarterly releases)
     console.log('\n=== STEP 5: DEPLOYING ADVISOR VESTING SCHEDULE ===\n');
-    await executeCommand('node', [SCRIPTS.advisorVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.advisorVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 6: Deploy airdrop/rewards vesting (1yr cliff, then 100%)
     console.log('\n=== STEP 6: DEPLOYING AIRDROP VESTING SCHEDULE ===\n');
-    await executeCommand('node', [SCRIPTS.airdropVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.airdropVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 7: Deploy ecosystem vesting (2yr linear)
     console.log('\n=== STEP 7: DEPLOYING ECOSYSTEM VESTING SCHEDULE ===\n');
-    await executeCommand('node', [SCRIPTS.ecosystemVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.ecosystemVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 8: Deploy treasury vesting (2yr linear)
     console.log('\n=== STEP 8: DEPLOYING TREASURY VESTING SCHEDULE ===\n');
-    await executeCommand('node', [SCRIPTS.treasuryVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.treasuryVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 9: Deploy long-term escrow (3yr cliff)
     console.log('\n=== STEP 9: DEPLOYING LONG-TERM ESCROW VESTING SCHEDULE ===\n');
-    await executeCommand('node', [SCRIPTS.escrowVesting, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.escrowVesting, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 10: Deploy timelock controller for governance
     console.log('\n=== STEP 10: DEPLOYING TIMELOCK CONTROLLER ===\n');
-    await executeCommand('node', [SCRIPTS.timelock, '--network', NETWORK]);
+    await executeCommand('node', [SCRIPTS.timelock, '--network', NETWORK, isDryRun ? '--dry-run' : ''], process.cwd(), isDryRun);
     
     // Step 11: Verify contracts on Explorer
-    if (NETWORK === 'zkSyncMainnet') {
+    if (NETWORK === 'zkSyncMainnet' && !isDryRun) {
       console.log('\n=== STEP 11: VERIFYING CONTRACTS ON MAINNET ===\n');
-      await executeCommand('node', [SCRIPTS.verifyMainnet]);
+      await executeCommand('node', [SCRIPTS.verifyMainnet], process.cwd(), isDryRun);
     }
     
     // Update deployments.json with deployment date
-    const networkKey = NETWORK === 'zkSyncMainnet' ? 'mainnet' : 'testnet';
-    updateDeploymentTimestamp(networkKey);
+    if (!isDryRun) {
+      const networkKey = NETWORK === 'zkSyncMainnet' ? 'mainnet' : 'testnet';
+      updateDeploymentTimestamp(networkKey);
+    }
     
-    console.log(`\n=== RESKA TOKEN DEPLOYMENT ON ${NETWORK} COMPLETE ===\n`);
+    console.log(`\n=== RESKA TOKEN DEPLOYMENT ON ${NETWORK} ${isDryRun ? 'DRY RUN ' : ''}COMPLETE ===\n`);
     console.log('Summary of deployment steps:');
     console.log('1. Token and vesting contracts deployed');
     console.log('2. Vesting contract funded');
@@ -291,6 +311,11 @@ async function deployAll() {
     console.log('1. Monitor token and vesting contract events');
     console.log('2. Prepare announcement for token launch');
     console.log('3. Set up monitoring systems for on-chain activities');
+    
+    if (isDryRun) {
+      console.log(`\n=== DRY RUN COMPLETED - NO ACTUAL TRANSACTIONS WERE SENT ===`);
+      console.log(`To perform the actual deployment, run the same command without --dry-run`);
+    }
     
   } catch (error) {
     console.error(`\n=== DEPLOYMENT ERROR ===\n`);
