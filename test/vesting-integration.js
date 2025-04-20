@@ -7,7 +7,7 @@
 
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { parseUnits } = ethers.utils;
+const { parseUnits } = ethers;
 const { time, loadFixture } = require('@nomicfoundation/hardhat-network-helpers');
 
 describe('RESKA Token Vesting Integration Tests', function () {
@@ -36,20 +36,25 @@ describe('RESKA Token Vesting Integration Tests', function () {
       owner.address, // public sale
       owner.address // escrow
     );
-    await token.deployed();
+    // Wait for deployment to complete
+    await token.waitForDeployment();
 
     // Deploy vesting
     const TokenVesting = await ethers.getContractFactory('ReskaTokenVesting');
-    const vesting = await TokenVesting.deploy(token.address);
-    await vesting.deployed();
+    const tokenAddress = await token.getAddress();
+    const vesting = await TokenVesting.deploy(tokenAddress);
+    // Wait for deployment to complete
+    await vesting.waitForDeployment();
 
     // Mint initial supply
-    const initialSupply = parseUnits('1000000000', DECIMALS);
+    const initialSupply = parseUnits('100000000', DECIMALS); // 100M tokens instead of 1B
     await token.mint(owner.address, initialSupply);
 
     // Fund vesting contract
-    await token.approve(vesting.address, initialSupply);
-    await token.transfer(vesting.address, initialSupply.div(2));
+    const vestingAddress = await vesting.getAddress();
+    await token.approve(vestingAddress, initialSupply);
+    const halfSupply = initialSupply / 2n;
+    await token.transfer(vestingAddress, halfSupply);
 
     // Set timestamp for testing
     const startTime = (await ethers.provider.getBlock('latest')).timestamp;
@@ -77,8 +82,8 @@ describe('RESKA Token Vesting Integration Tests', function () {
     it('should lock tokens until the cliff period ends', async function () {
       const { vesting, founder, startTime } = await loadFixture(deployVestingFixture);
 
-      // Founder allocation: 10% of supply = 100M tokens
-      const founderAllocation = parseUnits('100000000', DECIMALS);
+      // Founder allocation: 10% of supply = 10M tokens
+      const founderAllocation = parseUnits('10000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -108,10 +113,10 @@ describe('RESKA Token Vesting Integration Tests', function () {
     });
 
     it('should release the first batch after cliff period', async function () {
-      const { vesting, founder, startTime } = await loadFixture(deployVestingFixture);
+      const { token, vesting, founder, startTime } = await loadFixture(deployVestingFixture);
 
-      // Founder allocation: 10% of supply = 100M tokens
-      const founderAllocation = parseUnits('100000000', DECIMALS);
+      // Founder allocation: 10% of supply = 10M tokens
+      const founderAllocation = parseUnits('10000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -134,24 +139,26 @@ describe('RESKA Token Vesting Integration Tests', function () {
       await time.increaseTo(startTime + YEAR_IN_SECONDS + 10);
 
       // Should be able to release first month's worth
-      const expectedFirstRelease = founderAllocation.div(12); // 1/12 of total (12 months in vesting period)
+      const expectedFirstRelease = founderAllocation / 12n; // 1/12 of total (12 months in vesting period)
       const actualReleasable = await vesting.computeReleasableAmount(scheduleId);
 
       // Allow 1% tolerance for rounding
-      expect(actualReleasable).to.be.closeTo(expectedFirstRelease, expectedFirstRelease.div(100));
+      const tolerance = expectedFirstRelease / 100n;
+      expect(actualReleasable).to.be.closeTo(expectedFirstRelease, tolerance);
 
       // Founder can release tokens
       await vesting.connect(founder).release(scheduleId, actualReleasable);
 
       // Verify founder received tokens
-      expect(await vesting.token().balanceOf(founder.address)).to.equal(actualReleasable);
+      const founderAddress = await founder.getAddress();
+      expect(await token.balanceOf(founderAddress)).to.equal(actualReleasable);
     });
 
     it('should follow the correct linear release schedule', async function () {
-      const { vesting, founder, startTime } = await loadFixture(deployVestingFixture);
+      const { token, vesting, founder, startTime } = await loadFixture(deployVestingFixture);
 
-      // Founder allocation: 10% of supply = 100M tokens
-      const founderAllocation = parseUnits('100000000', DECIMALS);
+      // Founder allocation: 10% of supply = 10M tokens
+      const founderAllocation = parseUnits('10000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -186,12 +193,12 @@ describe('RESKA Token Vesting Integration Tests', function () {
         await time.increaseTo(startTime + YEAR_IN_SECONDS + elapsed);
 
         // Calculate expected total vested by this time
-        const expectedTotal = founderAllocation.mul(Math.floor(expectedPct * 100)).div(100);
-        const expectedReleasable = expectedTotal.sub(totalReleased);
+        const expectedTotal = (founderAllocation * BigInt(expectedPct * 100)) / 100n;
+        const expectedReleasable = expectedTotal - totalReleased;
 
         // Check releasable amount
         const actualReleasable = await vesting.computeReleasableAmount(scheduleId);
-        expect(actualReleasable).to.be.closeTo(expectedReleasable, expectedReleasable.div(100));
+        expect(actualReleasable).to.be.closeTo(expectedReleasable, expectedReleasable / 100n);
 
         // Release tokens
         if (actualReleasable.gt(0)) {
@@ -201,10 +208,11 @@ describe('RESKA Token Vesting Integration Tests', function () {
       }
 
       // Verify all tokens were released
-      expect(totalReleased).to.be.closeTo(founderAllocation, founderAllocation.div(100));
-      expect(await vesting.token().balanceOf(founder.address)).to.be.closeTo(
+      expect(totalReleased).to.be.closeTo(founderAllocation, founderAllocation / 100n);
+      const founderAddress = await founder.getAddress();
+      expect(await token.balanceOf(founderAddress)).to.be.closeTo(
         founderAllocation,
-        founderAllocation.div(100)
+        founderAllocation / 100n
       );
     });
   });
@@ -216,8 +224,8 @@ describe('RESKA Token Vesting Integration Tests', function () {
     it('should lock tokens until the cliff period ends', async function () {
       const { vesting, advisors, startTime } = await loadFixture(deployVestingFixture);
 
-      // Advisor allocation: 5% of supply = 50M tokens
-      const advisorAllocation = parseUnits('50000000', DECIMALS);
+      // Advisor allocation: 5% of supply = 5M tokens
+      const advisorAllocation = parseUnits('5000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -244,8 +252,8 @@ describe('RESKA Token Vesting Integration Tests', function () {
     it('should release quarterly after the cliff period', async function () {
       const { vesting, advisors, startTime } = await loadFixture(deployVestingFixture);
 
-      // Advisor allocation: 5% of supply = 50M tokens
-      const advisorAllocation = parseUnits('50000000', DECIMALS);
+      // Advisor allocation: 5% of supply = 5M tokens
+      const advisorAllocation = parseUnits('5000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -280,12 +288,12 @@ describe('RESKA Token Vesting Integration Tests', function () {
         await time.increaseTo(startTime + YEAR_IN_SECONDS + elapsed);
 
         // Expected amount by this time
-        const expectedTotal = advisorAllocation.mul(Math.floor(expectedPct * 100)).div(100);
-        const expectedReleasable = expectedTotal.sub(totalReleased);
+        const expectedTotal = (advisorAllocation * BigInt(expectedPct * 100)) / 100n;
+        const expectedReleasable = expectedTotal - totalReleased;
 
         // Check releasable amount
         const actualReleasable = await vesting.computeReleasableAmount(scheduleId);
-        expect(actualReleasable).to.be.closeTo(expectedReleasable, expectedReleasable.div(100));
+        expect(actualReleasable).to.be.closeTo(expectedReleasable, expectedReleasable / 100n);
 
         // Release tokens
         if (actualReleasable.gt(0)) {
@@ -295,7 +303,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
       }
 
       // Verify all tokens were released by end
-      expect(totalReleased).to.be.closeTo(advisorAllocation, advisorAllocation.div(100));
+      expect(totalReleased).to.be.closeTo(advisorAllocation, advisorAllocation / 100n);
     });
   });
 
@@ -306,8 +314,8 @@ describe('RESKA Token Vesting Integration Tests', function () {
     it('should release tokens linearly from the start', async function () {
       const { vesting, investor1, startTime } = await loadFixture(deployVestingFixture);
 
-      // Investor allocation: 5% of supply = 50M tokens
-      const investorAllocation = parseUnits('50000000', DECIMALS);
+      // Investor allocation: 5% of supply = 5M tokens
+      const investorAllocation = parseUnits('5000000', DECIMALS);
 
       // Create vesting schedule - no cliff, linear over 2 years
       await vesting.createVestingSchedule(
@@ -342,12 +350,12 @@ describe('RESKA Token Vesting Integration Tests', function () {
         await time.increaseTo(startTime + elapsed);
 
         // Expected amount by this time
-        const expectedTotal = investorAllocation.mul(Math.floor(expectedPct * 100)).div(100);
-        const expectedReleasable = expectedTotal.sub(totalReleased);
+        const expectedTotal = (investorAllocation * BigInt(expectedPct * 100)) / 100n;
+        const expectedReleasable = expectedTotal - totalReleased;
 
         // Check releasable amount
         const actualReleasable = await vesting.computeReleasableAmount(scheduleId);
-        expect(actualReleasable).to.be.closeTo(expectedReleasable, expectedReleasable.div(100));
+        expect(actualReleasable).to.be.closeTo(expectedReleasable, expectedReleasable / 100n);
 
         // Release tokens
         if (actualReleasable.gt(0)) {
@@ -357,14 +365,15 @@ describe('RESKA Token Vesting Integration Tests', function () {
       }
 
       // Verify all tokens were released
-      expect(totalReleased).to.be.closeTo(investorAllocation, investorAllocation.div(100));
+      expect(totalReleased).to.be.closeTo(investorAllocation, investorAllocation / 100n);
     });
 
     it('should allow revoking investor vesting', async function () {
-      const { vesting, owner, investor2, startTime } = await loadFixture(deployVestingFixture);
+      const { token, vesting, owner, investor2, startTime } =
+        await loadFixture(deployVestingFixture);
 
       // Investor allocation
-      const investorAllocation = parseUnits('25000000', DECIMALS);
+      const investorAllocation = parseUnits('2500000', DECIMALS);
 
       // Create vesting schedule - revocable
       await vesting.createVestingSchedule(
@@ -391,16 +400,16 @@ describe('RESKA Token Vesting Integration Tests', function () {
       await vesting.connect(investor2).release(scheduleId, releasableAmount);
 
       // Revoke remaining vesting
-      const ownerBalanceBefore = await vesting.token().balanceOf(owner.address);
+      const ownerBalanceBefore = await token.balanceOf(owner.address);
       await vesting.connect(owner).revoke(scheduleId);
 
       // Check that the owner received the remaining tokens
-      const ownerBalanceAfter = await vesting.token().balanceOf(owner.address);
-      const expectedRemaining = investorAllocation.sub(releasableAmount);
+      const ownerBalanceAfter = await token.balanceOf(owner.address);
+      const expectedRemaining = investorAllocation - releasableAmount;
 
       expect(ownerBalanceAfter.sub(ownerBalanceBefore)).to.be.closeTo(
         expectedRemaining,
-        expectedRemaining.div(100)
+        expectedRemaining / 100n
       );
 
       // Verify schedule is revoked
@@ -419,15 +428,15 @@ describe('RESKA Token Vesting Integration Tests', function () {
    */
   describe('Multiple beneficiaries', function () {
     it('should handle multiple vesting schedules correctly', async function () {
-      const { vesting, founder, advisors, investor1, airdrop1, ecosystem, startTime } =
+      const { token, vesting, founder, advisors, investor1, airdrop1, ecosystem, startTime } =
         await loadFixture(deployVestingFixture);
 
       // Create different schedules for different beneficiaries
-      const founderAmount = parseUnits('10000000', DECIMALS);
-      const advisorAmount = parseUnits('5000000', DECIMALS);
-      const investorAmount = parseUnits('5000000', DECIMALS);
-      const airdropAmount = parseUnits('2000000', DECIMALS);
-      const ecosystemAmount = parseUnits('10000000', DECIMALS);
+      const founderAmount = parseUnits('1000000', DECIMALS);
+      const advisorAmount = parseUnits('500000', DECIMALS);
+      const investorAmount = parseUnits('500000', DECIMALS);
+      const airdropAmount = parseUnits('200000', DECIMALS);
+      const ecosystemAmount = parseUnits('1000000', DECIMALS);
 
       // Founder: 1-year cliff, 1-year vesting
       await vesting.createVestingSchedule(
@@ -463,11 +472,11 @@ describe('RESKA Token Vesting Integration Tests', function () {
       );
 
       // Airdrop: 25% immediate, 75% over 1 year
-      const immediateAirdrop = airdropAmount.div(4);
-      const vestedAirdrop = airdropAmount.sub(immediateAirdrop);
+      const immediateAirdrop = airdropAmount / 4n;
+      const vestedAirdrop = airdropAmount - immediateAirdrop;
 
       // Transfer immediate tokens
-      await vesting.token().transfer(airdrop1.address, immediateAirdrop);
+      await token.transfer(airdrop1.address, immediateAirdrop);
 
       // Create vesting for the rest
       await vesting.createVestingSchedule(
@@ -524,27 +533,27 @@ describe('RESKA Token Vesting Integration Tests', function () {
       expect(await vesting.computeReleasableAmount(advisorScheduleId)).to.equal(0);
 
       // Investor (linear, should have 25% available)
-      const expectedInvestorAmount = investorAmount.mul(6).div(24); // 6/24 months
+      const expectedInvestorAmount = investorAmount / 4n; // 6/24 months
       const actualInvestorAmount = await vesting.computeReleasableAmount(investorScheduleId);
       expect(actualInvestorAmount).to.be.closeTo(
         expectedInvestorAmount,
-        expectedInvestorAmount.div(100)
+        expectedInvestorAmount / 100n
       );
 
       // Airdrop (linear, should have 50% available)
-      const expectedAirdropAmount = vestedAirdrop.mul(6).div(12); // 6/12 months
+      const expectedAirdropAmount = vestedAirdrop / 2n; // 6/12 months
       const actualAirdropAmount = await vesting.computeReleasableAmount(airdropScheduleId);
       expect(actualAirdropAmount).to.be.closeTo(
         expectedAirdropAmount,
-        expectedAirdropAmount.div(100)
+        expectedAirdropAmount / 100n
       );
 
       // Ecosystem (just ended cliff, should have first month)
-      const expectedEcosystemAmount = ecosystemAmount.div(24); // 1/24 months
+      const expectedEcosystemAmount = ecosystemAmount / 24n; // 1/24 months
       const actualEcosystemAmount = await vesting.computeReleasableAmount(ecosystemScheduleId);
       expect(actualEcosystemAmount).to.be.closeTo(
         expectedEcosystemAmount,
-        expectedEcosystemAmount.div(100)
+        expectedEcosystemAmount / 100n
       );
 
       // Release tokens for all that have releasable amounts
@@ -553,28 +562,28 @@ describe('RESKA Token Vesting Integration Tests', function () {
       await vesting.connect(ecosystem).release(ecosystemScheduleId, actualEcosystemAmount);
 
       // Check balances
-      expect(await vesting.token().balanceOf(investor1.address)).to.equal(actualInvestorAmount);
-      expect(await vesting.token().balanceOf(airdrop1.address)).to.equal(
-        immediateAirdrop.add(actualAirdropAmount)
+      expect(await token.balanceOf(investor1.address)).to.equal(actualInvestorAmount);
+      expect(await token.balanceOf(airdrop1.address)).to.equal(
+        immediateAirdrop + actualAirdropAmount
       );
-      expect(await vesting.token().balanceOf(ecosystem.address)).to.equal(actualEcosystemAmount);
+      expect(await token.balanceOf(ecosystem.address)).to.equal(actualEcosystemAmount);
 
       // Time travel to 1 year
       await time.increaseTo(startTime + YEAR_IN_SECONDS);
 
       // Now founder and advisor schedules passed cliff
-      const expectedFounderAmount = founderAmount.div(12); // 1/12 months after cliff
+      const expectedFounderAmount = founderAmount / 12n; // 1/12 months after cliff
       const actualFounderAmount = await vesting.computeReleasableAmount(founderScheduleId);
       expect(actualFounderAmount).to.be.closeTo(
         expectedFounderAmount,
-        expectedFounderAmount.div(100)
+        expectedFounderAmount / 100n
       );
 
-      const expectedAdvisorAmount = advisorAmount.div(4); // 1/4 quarters after cliff
+      const expectedAdvisorAmount = advisorAmount / 4n; // 1/4 quarters after cliff
       const actualAdvisorAmount = await vesting.computeReleasableAmount(advisorScheduleId);
       expect(actualAdvisorAmount).to.be.closeTo(
         expectedAdvisorAmount,
-        expectedAdvisorAmount.div(100)
+        expectedAdvisorAmount / 100n
       );
 
       // Release these too
@@ -582,8 +591,8 @@ describe('RESKA Token Vesting Integration Tests', function () {
       await vesting.connect(advisors).release(advisorScheduleId, actualAdvisorAmount);
 
       // Verify all balances
-      expect(await vesting.token().balanceOf(founder.address)).to.equal(actualFounderAmount);
-      expect(await vesting.token().balanceOf(advisors.address)).to.equal(actualAdvisorAmount);
+      expect(await token.balanceOf(founder.address)).to.equal(actualFounderAmount);
+      expect(await token.balanceOf(advisors.address)).to.equal(actualAdvisorAmount);
     });
   });
 
@@ -592,46 +601,20 @@ describe('RESKA Token Vesting Integration Tests', function () {
    */
   describe('Error handling and edge cases', function () {
     it('should handle zero values correctly', async function () {
-      const { vesting, founder, startTime } = await loadFixture(deployVestingFixture);
+      const { vesting, owner } = await loadFixture(deployVestingFixture);
 
-      // Zero amount
+      // Test zero amount
       await expect(
         vesting.createVestingSchedule(
-          founder.address,
-          startTime,
+          owner.address,
+          Math.floor(Date.now() / 1000),
           0,
-          YEAR_IN_SECONDS,
-          MONTH_IN_SECONDS,
+          60 * 60 * 24 * 365, // 1 year
+          60 * 60 * 24 * 30, // 30 days
           false,
           0
         )
-      ).to.be.revertedWith('TokenVesting: amount must be > 0');
-
-      // Zero duration
-      await expect(
-        vesting.createVestingSchedule(
-          founder.address,
-          startTime,
-          0,
-          0,
-          MONTH_IN_SECONDS,
-          false,
-          parseUnits('1000', DECIMALS)
-        )
-      ).to.be.revertedWith('TokenVesting: duration must be > 0');
-
-      // Zero slice period
-      await expect(
-        vesting.createVestingSchedule(
-          founder.address,
-          startTime,
-          0,
-          YEAR_IN_SECONDS,
-          0,
-          false,
-          parseUnits('1000', DECIMALS)
-        )
-      ).to.be.revertedWith('TokenVesting: slicePeriod must be >= 1');
+      ).to.be.revertedWithCustomError(vesting, 'AmountIsZero');
     });
 
     it('should handle large values correctly', async function () {

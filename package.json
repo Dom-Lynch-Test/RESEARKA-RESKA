@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "RESEARKA (RESKA) ERC-20 token for a decentralized academic publishing platform",
   "main": "index.js",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "scripts": {
     "test": "hardhat test",
     "test:local": "HARDHAT_NETWORK=hardhat npx mocha --require hardhat/register test/reskatoken-local.test.js",
@@ -16,7 +19,10 @@
     "deploy:goerli": "hardhat run scripts/deploy.js --network goerli",
     "deploy:mainnet": "hardhat run scripts/deploy.js --network mainnet",
     "deploy:zksync-testnet": "hardhat run scripts/deploy-zksync-testnet.js --network zkSyncTestnet",
+    "deploy:zksync-mainnet": "hardhat run scripts/deploy-zksync-mainnet.js --network zkSyncMainnet",
+    "deploy:vesting-mainnet": "hardhat run scripts/deploy-vesting-mainnet.js --network zkSyncMainnet",
     "verify:zksync-testnet": "hardhat verify --network zkSyncTestnet",
+    "verify:zksync-mainnet": "hardhat verify --network zkSyncMainnet",
     "verify": "hardhat verify",
     "node": "node scripts/start-node.js",
     "gas-report": "REPORT_GAS=true hardhat test",
