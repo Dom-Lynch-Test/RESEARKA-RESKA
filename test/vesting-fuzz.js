@@ -114,7 +114,7 @@ describe("RESKA Token Vesting Fuzz Tests", function() {
       );
       
       // Get the schedule ID
-      const scheduleId = await vesting.computeVestingScheduleIdForAddressAndIndex(beneficiary1.address, 0);
+      const scheduleId = await vesting.computeVestingScheduleIdForAddressAndIndex(beneficiary1.address, i);
       
       // Verify the schedule was created correctly
       const schedule = await vesting.getVestingSchedule(scheduleId);
@@ -250,7 +250,7 @@ describe("RESKA Token Vesting Fuzz Tests", function() {
       );
       
       // Store schedule ID
-      const scheduleId = await vesting.computeVestingScheduleIdForAddressAndIndex(beneficiaries[i].address, 0);
+      const scheduleId = await vesting.computeVestingScheduleIdForAddressAndIndex(beneficiaries[i].address, i);
       scheduleIds.push(scheduleId);
     }
     
