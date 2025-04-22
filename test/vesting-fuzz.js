@@ -32,32 +32,34 @@ describe('RESKA Token Vesting Fuzz Tests', function () {
     const ReskaToken = await ethers.getContractFactory('ReskaToken');
     const TokenVesting = await ethers.getContractFactory('ReskaTokenVesting');
 
-    // Deploy token with all roles assigned to owner
+    // Deploy token
     const token = await ReskaToken.deploy(
-      owner.address, // founder
-      owner.address, // advisors
-      owner.address, // investors
-      owner.address, // airdrops
-      owner.address, // ecosystem
-      owner.address, // treasury
-      owner.address, // publicSale
-      owner.address // escrow
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address
     );
     await token.waitForDeployment();
 
-    // Deploy vesting contract
+    // Note: Initial supply is already minted and distributed in the constructor
+    // Owner will have their allocation percentages (treasury, public sale, and escrow roles)
+
+    // Deploy vesting
     const tokenAddress = await token.getAddress();
     const vesting = await TokenVesting.deploy(tokenAddress);
     await vesting.waitForDeployment();
 
-    // Mint tokens to owner
-    const initialSupply = parseUnits('100000000', DECIMALS); // 100M tokens instead of 1B
-    await token.mint(owner.address, initialSupply);
+    // Get owner balance after initial distribution
+    const ownerBalance = await token.balanceOf(owner.address);
 
-    // Fund vesting contract
+    // Fund vesting contract with what owner has available
     const vestingAddress = await vesting.getAddress();
-    const halfSupply = initialSupply / 2n;
-    await token.transfer(vestingAddress, halfSupply); // 50M tokens
+    await token.approve(vestingAddress, ownerBalance);
+    await token.transfer(vestingAddress, ownerBalance / 2n);
 
     // Set current block timestamp as the base for tests
     const startTime = (await ethers.provider.getBlock('latest')).timestamp;
@@ -69,7 +71,6 @@ describe('RESKA Token Vesting Fuzz Tests', function () {
       beneficiary2,
       beneficiary3,
       startTime,
-      initialSupply,
     };
   }
 
@@ -441,5 +442,81 @@ describe('RESKA Token Vesting Fuzz Tests', function () {
         0
       )
     ).to.be.revertedWithCustomError(vesting, 'AmountIsZero');
+  });
+
+  /**
+   * Test fuzz scenario
+   */
+  it('should validate fuzz scenario', async function () {
+    const { vesting, beneficiary1, startTime } = await loadFixture(deployVestingFixture);
+
+    const fuzzScenario = fc.record({
+      amount: fc.bigInt(MIN_AMOUNT, MAX_AMOUNT),
+      cliff: fc.integer(0, YEAR_IN_SECONDS),
+      duration: fc.integer(MONTH_IN_SECONDS, YEAR_IN_SECONDS * 3),
+      slicePeriod: fc.integer(DAY_IN_SECONDS, MONTH_IN_SECONDS * 6),
+      revocable: fc.boolean(),
+      timestamps: fc.array(fc.integer(0, YEAR_IN_SECONDS * 2), {
+        minLength: 1,
+        maxLength: 10,
+      }),
+    });
+
+    await fc.assert(
+      fc.asyncProperty(
+        fuzzScenario,
+        async ({ amount, cliff, duration, slicePeriod, revocable, timestamps }) => {
+          // Create the schedule with deterministic parameters
+          await vesting.createVestingSchedule(
+            beneficiary1.address,
+            startTime,
+            cliff,
+            duration,
+            slicePeriod,
+            revocable,
+            amount
+          );
+
+          // Get the schedule ID for the created schedule
+          const scheduleId = await vesting.computeVestingScheduleIdForAddressAndIndex(
+            beneficiary1.address,
+            0
+          );
+
+          // Time-travel to various points and check releases
+          for (const timePoint of timestamps) {
+            // Time-travel
+            await time.increaseTo(startTime + timePoint);
+
+            // Calculate expected releasable amount
+            let expectedReleasable;
+
+            if (timePoint < cliff) {
+              // Before cliff, nothing is releasable
+              expectedReleasable = 0n;
+            } else if (timePoint >= cliff + duration) {
+              // After vesting period, everything should be releasable
+              expectedReleasable = amount;
+            } else {
+              // During vesting period, calculate based on elapsed time
+              const timeFromCliff = timePoint - cliff;
+              const vestedSlices = Math.floor(timeFromCliff / slicePeriod) + 1;
+              const totalSlices = Math.ceil(duration / slicePeriod);
+              expectedReleasable = (amount * BigInt(vestedSlices)) / BigInt(totalSlices);
+            }
+
+            // Check contract's releasable amount calculation
+            const actualReleasable = await vesting.computeReleasableAmount(scheduleId);
+
+            // We allow for a small rounding difference due to integer division
+            const tolerance = 1n; // 1 token unit tolerance
+            expect(actualReleasable).to.be.closeTo(expectedReleasable, tolerance);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 3 } // Limit to 3 test cases for reasonable test time
+    );
   });
 });

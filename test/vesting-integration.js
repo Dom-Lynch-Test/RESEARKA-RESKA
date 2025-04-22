@@ -39,6 +39,10 @@ describe('RESKA Token Vesting Integration Tests', function () {
     // Wait for deployment to complete
     await token.waitForDeployment();
 
+    // Note: Initial supply is automatically minted and distributed in the constructor
+    // Owner will have their allocation percentages (likely 10% each for treasury, public sale, and escrow)
+    // so we need to only transfer what the owner has
+
     // Deploy vesting
     const TokenVesting = await ethers.getContractFactory('ReskaTokenVesting');
     const tokenAddress = await token.getAddress();
@@ -46,15 +50,13 @@ describe('RESKA Token Vesting Integration Tests', function () {
     // Wait for deployment to complete
     await vesting.waitForDeployment();
 
-    // Mint initial supply
-    const initialSupply = parseUnits('100000000', DECIMALS); // 100M tokens instead of 1B
-    await token.mint(owner.address, initialSupply);
+    // Get owner balance after initial distribution
+    const ownerBalance = await token.balanceOf(owner.address);
 
-    // Fund vesting contract
+    // Fund vesting contract with what owner has available
     const vestingAddress = await vesting.getAddress();
-    await token.approve(vestingAddress, initialSupply);
-    const halfSupply = initialSupply / 2n;
-    await token.transfer(vestingAddress, halfSupply);
+    await token.approve(vestingAddress, ownerBalance);
+    await token.transfer(vestingAddress, ownerBalance / 2n);
 
     // Set timestamp for testing
     const startTime = (await ethers.provider.getBlock('latest')).timestamp;
@@ -71,7 +73,6 @@ describe('RESKA Token Vesting Integration Tests', function () {
       airdrop2,
       ecosystem,
       startTime,
-      initialSupply,
     };
   }
 
@@ -83,7 +84,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
       const { vesting, founder, startTime } = await loadFixture(deployVestingFixture);
 
       // Founder allocation: 10% of supply = 10M tokens
-      const founderAllocation = parseUnits('10000000', DECIMALS);
+      const founderAllocation = parseUnits('100000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -116,7 +117,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
       const { token, vesting, founder, startTime } = await loadFixture(deployVestingFixture);
 
       // Founder allocation: 10% of supply = 10M tokens
-      const founderAllocation = parseUnits('10000000', DECIMALS);
+      const founderAllocation = parseUnits('100000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -158,7 +159,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
       const { token, vesting, founder, startTime } = await loadFixture(deployVestingFixture);
 
       // Founder allocation: 10% of supply = 10M tokens
-      const founderAllocation = parseUnits('10000000', DECIMALS);
+      const founderAllocation = parseUnits('100000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -225,7 +226,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
       const { vesting, advisors, startTime } = await loadFixture(deployVestingFixture);
 
       // Advisor allocation: 5% of supply = 5M tokens
-      const advisorAllocation = parseUnits('5000000', DECIMALS);
+      const advisorAllocation = parseUnits('50000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -253,7 +254,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
       const { vesting, advisors, startTime } = await loadFixture(deployVestingFixture);
 
       // Advisor allocation: 5% of supply = 5M tokens
-      const advisorAllocation = parseUnits('5000000', DECIMALS);
+      const advisorAllocation = parseUnits('50000000', DECIMALS);
 
       // Create vesting schedule
       await vesting.createVestingSchedule(
@@ -315,7 +316,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
       const { vesting, investor1, startTime } = await loadFixture(deployVestingFixture);
 
       // Investor allocation: 5% of supply = 5M tokens
-      const investorAllocation = parseUnits('5000000', DECIMALS);
+      const investorAllocation = parseUnits('50000000', DECIMALS);
 
       // Create vesting schedule - no cliff, linear over 2 years
       await vesting.createVestingSchedule(
@@ -373,7 +374,7 @@ describe('RESKA Token Vesting Integration Tests', function () {
         await loadFixture(deployVestingFixture);
 
       // Investor allocation
-      const investorAllocation = parseUnits('2500000', DECIMALS);
+      const investorAllocation = parseUnits('25000000', DECIMALS);
 
       // Create vesting schedule - revocable
       await vesting.createVestingSchedule(
@@ -432,11 +433,11 @@ describe('RESKA Token Vesting Integration Tests', function () {
         await loadFixture(deployVestingFixture);
 
       // Create different schedules for different beneficiaries
-      const founderAmount = parseUnits('1000000', DECIMALS);
-      const advisorAmount = parseUnits('500000', DECIMALS);
-      const investorAmount = parseUnits('500000', DECIMALS);
-      const airdropAmount = parseUnits('200000', DECIMALS);
-      const ecosystemAmount = parseUnits('1000000', DECIMALS);
+      const founderAmount = parseUnits('100000000', DECIMALS);
+      const advisorAmount = parseUnits('50000000', DECIMALS);
+      const investorAmount = parseUnits('50000000', DECIMALS);
+      const airdropAmount = parseUnits('20000000', DECIMALS);
+      const ecosystemAmount = parseUnits('100000000', DECIMALS);
 
       // Founder: 1-year cliff, 1-year vesting
       await vesting.createVestingSchedule(
